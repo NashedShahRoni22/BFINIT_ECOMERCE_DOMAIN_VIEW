@@ -1,7 +1,12 @@
+/* Tailwind styles */
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   THEME CONFIGURATION
+   ============================================ */
 
 @theme {
   --font-geist: var(--font-geist-sans);
@@ -12,9 +17,6 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -30,6 +32,13 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -48,6 +57,10 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ============================================
+   COLOR SCHEME DEFINITIONS
+   ============================================ */
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -65,6 +78,13 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --success: oklch(0.627 0.194 154.449);
+  --success-foreground: oklch(0.985 0 0);
+  --warning: oklch(0.768 0.183 85.594);
+  --warning-foreground: oklch(0.145 0 0);
+  --info: oklch(0.571 0.201 251.067);
+  --info-foreground: oklch(0.985 0 0);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -99,6 +119,13 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --success: oklch(0.697 0.179 154.449);
+  --success-foreground: oklch(0.985 0 0);
+  --warning: oklch(0.838 0.153 85.594);
+  --warning-foreground: oklch(0.145 0 0);
+  --info: oklch(0.641 0.181 251.067);
+  --info-foreground: oklch(0.985 0 0);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
@@ -117,6 +144,10 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ============================================
+   BASE LAYER - Tailwind Utilities
+   ============================================ */
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -124,4 +155,395 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ============================================
+   UTILITIES LAYER - Custom Scrollbars
+   ============================================ */
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.25);
+  }
+
+  /* For Firefox */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+  }
+
+  .custom-scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .custom-scrollbar-hide {
+    scrollbar-width: none;
+  }
+
+  .custom-scrollbar-hide {
+    -ms-overflow-style: none;
+  }
+}
+
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ============================================
+   SUNEDITOR Editing Panel STYLING
+   ============================================ */
+
+.sun-editor {
+  border-radius: 0.5rem !important;
+  border: 1px solid rgb(209 213 219) !important;
+}
+
+.sun-editor:focus-within {
+  outline: none;
+}
+
+.sun-editor .se-toolbar {
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+  border-bottom: 1px solid rgb(229 231 235) !important;
+}
+
+.sun-editor .se-wrapper {
+  border-radius: 0 0 0.5rem 0.5rem !important;
+}
+
+.sun-editor .se-wrapper .se-wrapper-inner {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+/* ============================================
+   SUNEDITOR CONTENT DISPLAY STYLES
+   ============================================ */
+
+#content-display {
+  color: var(--foreground);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Typography */
+#content-display h1 {
+  font-size: 2rem;
+  line-height: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+  color: var(--foreground);
+}
+
+#content-display h2 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  margin-top: 1.5rem;
+  color: var(--foreground);
+}
+
+#content-display h3 {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  margin-top: 1.25rem;
+  color: var(--foreground);
+}
+
+#content-display h4,
+#content-display h5,
+#content-display h6 {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+  color: var(--foreground);
+}
+
+#content-display p {
+  font-size: 1rem;
+  line-height: 1.75rem;
+  font-weight: 400;
+  margin-bottom: 1rem;
+  color: var(--foreground);
+}
+
+#content-display strong {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+#content-display em {
+  font-style: italic;
+}
+
+/* Links */
+#content-display a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s ease;
+}
+
+#content-display a:hover {
+  color: color-mix(in oklch, var(--primary), transparent 20%);
+}
+
+/* Lists */
+#content-display ul,
+#content-display ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  line-height: 1.75rem;
+  color: var(--foreground);
+}
+
+#content-display ul {
+  list-style-type: disc;
+}
+
+#content-display ol {
+  list-style-type: decimal;
+}
+
+#content-display li {
+  margin-bottom: 0.5rem;
+}
+
+/* Nested lists (for outdent/indent support) */
+#content-display ul ul,
+#content-display ul ol,
+#content-display ol ul,
+#content-display ol ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#content-display ul ul {
+  list-style-type: circle;
+}
+
+#content-display ul ul ul {
+  list-style-type: square;
+}
+
+/* Blockquote */
+#content-display blockquote {
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+  border-left: 4px solid var(--primary);
+  background-color: var(--muted);
+  color: var(--foreground);
+  font-style: italic;
+  border-radius: var(--radius-sm);
+}
+
+#content-display blockquote p {
+  margin-bottom: 0.5rem;
+}
+
+#content-display blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Code blocks */
+#content-display pre {
+  background-color: var(--muted);
+  color: var(--foreground);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+}
+
+#content-display code {
+  background-color: var(--muted);
+  color: var(--foreground);
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+#content-display pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.875rem;
+}
+
+/* Images */
+#content-display img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+  border-radius: var(--radius-md);
+  display: block;
+}
+
+#content-display figure {
+  margin-bottom: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+#content-display figure img {
+  margin-bottom: 0.5rem;
+  margin-top: 0;
+}
+
+#content-display figcaption {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  text-align: center;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+/* Video embeds */
+#content-display iframe {
+  max-width: 100%;
+  margin-bottom: 1.5rem;
+  margin-top: 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+#content-display .se-video-container {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  border-radius: var(--radius-md);
+}
+
+#content-display .se-video-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+/* Horizontal rule */
+#content-display hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+/* Tables - Use design system colors */
+#content-display table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  margin-top: 1.5rem;
+  border: 1px solid var(--border) !important;
+}
+
+#content-display td,
+#content-display th {
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: top;
+  border: 1px solid var(--border) !important;
+}
+
+/* Override inline styles from SunEditor */
+#content-display table[style],
+#content-display td[style],
+#content-display th[style] {
+  border-color: var(--border) !important;
+}
+
+/* SunEditor wraps content in divs inside cells */
+#content-display td > div,
+#content-display th > div {
+  margin: 0;
+  padding: 0;
+}
+
+#content-display td > div > p,
+#content-display th > div > p {
+  margin: 0;
+}
+
+/* Table header styling */
+#content-display th {
+  font-weight: 600;
+  background-color: var(--muted);
+  color: var(--foreground);
+}
+
+#content-display thead tr {
+  background-color: var(--muted);
+}
+
+/* Table row alternation */
+#content-display tbody tr:nth-child(even) {
+  background-color: color-mix(in oklch, var(--muted), transparent 70%);
+}
+
+#content-display tbody tr:hover {
+  background-color: color-mix(in oklch, var(--muted), transparent 50%);
+  transition: background-color 0.15s ease;
+}
+
+/* SunEditor table wrapper */
+#content-display .se-component.se-table-container {
+  margin-bottom: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+/* Text alignment utilities */
+#content-display .se-align-left {
+  text-align: left;
+}
+
+#content-display .se-align-center {
+  text-align: center;
+}
+
+#content-display .se-align-right {
+  text-align: right;
+}
+
+#content-display .se-align-justify {
+  text-align: justify;
+}
+
+/* Spacing fixes */
+#content-display > *:first-child {
+  margin-top: 0;
+}
+
+#content-display > *:last-child {
+  margin-bottom: 0;
 }

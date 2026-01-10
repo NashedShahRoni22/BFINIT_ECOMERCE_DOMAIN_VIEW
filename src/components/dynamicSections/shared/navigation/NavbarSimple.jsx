@@ -1,42 +1,48 @@
 "use client";
+
 import { useState } from "react";
-import Link from "next/link";
+import { Search, ShoppingCart, User, Menu, X, ChevronDown } from "lucide-react";
 import {
-  Search,
-  ShoppingCart,
-  User,
-  Menu,
-  X,
-  Heart,
-  ChevronDown,
-} from "lucide-react";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import useCart from "@/hooks/useCart";
+import useAuth from "@/hooks/useAuth";
+import Link from "next/link";
+
+const navigationLinks = [
+  { name: "Home", href: "/" },
+  { name: "Shop", href: "/shop" },
+  { name: "About", href: "/about" },
+  { name: "Contact", href: "/contact" },
+];
 
 export default function NavbarSimple({ content }) {
+  const { customer, handleLogout } = useAuth();
   const { totalItems } = useCart();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
 
-  const navigationLinks = [
-    { name: "Home", href: "/" },
-    { name: "Shop", href: "/shop" },
-    { name: "About", href: "/about" },
-    { name: "Contact", href: "/contact" },
-  ];
-
   return (
     <nav className="bg-background border-border sticky top-0 z-50 border-b">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Mobile menu button */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="hover:bg-accent rounded-md p-2 lg:hidden"
+            className="lg:hidden"
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          </Button>
 
           {/* Logo */}
           <div className="flex shrink-0 items-center">
@@ -50,7 +56,7 @@ export default function NavbarSimple({ content }) {
             {navigationLinks.map((link) => (
               <Link
                 key={link.name}
-                href={link.href}
+                href={`${link.href}`}
                 className="hover:text-primary flex items-center gap-1 text-sm font-medium transition-colors duration-200"
               >
                 {link.name}
@@ -60,135 +66,121 @@ export default function NavbarSimple({ content }) {
           </div>
 
           {/* Right side icons */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             {/* Search */}
             <div className="relative">
               {searchOpen ? (
-                <div className="flex items-center">
-                  <input
+                <div className="flex items-center gap-2">
+                  <Input
                     type="text"
                     placeholder="Search products..."
                     autoFocus
-                    className="border-input bg-background focus:ring-ring w-48 rounded-lg border px-4 py-2 pr-10 text-sm focus:ring-2 focus:outline-none sm:w-64"
+                    className="h-9 w-48 text-sm sm:w-64"
                   />
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setSearchOpen(false)}
-                    className="hover:bg-accent absolute right-2 rounded-md p-1"
+                    className="h-9 w-9"
                   >
                     <X size={18} />
-                  </button>
+                  </Button>
                 </div>
               ) : (
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setSearchOpen(true)}
-                  className="hover:bg-accent rounded-md p-2 transition-colors"
                   aria-label="Search"
                 >
                   <Search size={20} />
-                </button>
+                </Button>
               )}
             </div>
 
-            {/* Wishlist - Desktop only */}
-            {/* <button
-              className="hover:bg-accent  hidden rounded-md p-2 transition-colors sm:block"
-              aria-label="Wishlist"
+            {/* Account Popover */}
+            <Popover
+              open={accountDropdownOpen}
+              onOpenChange={setAccountDropdownOpen}
             >
-              <Heart size={20} />
-            </button> */}
-
-            {/* Account Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
-                className="hover:bg-accent rounded-md p-2 transition-colors"
-                aria-label="Account"
-              >
-                <User size={20} />
-              </button>
-
-              {accountDropdownOpen && (
-                <div className="bg-popover border-border absolute right-0 z-50 mt-2 w-48 rounded-lg border py-2 shadow-lg">
-                  <Link
-                    href="/login"
-                    className="text-popover-foreground hover:bg-accent block px-4 py-2 text-sm transition-colors"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/signup"
-                    className="text-popover-foreground hover:bg-accent block px-4 py-2 text-sm transition-colors"
-                  >
-                    Create Account
-                  </Link>
-                  {/* <hr className="border-border my-2" />
-                  <a
-                    href="#"
-                    className="text-popover-foreground hover:bg-accent block px-4 py-2 text-sm transition-colors"
-                  >
-                    Orders
-                  </a>
-                  <a
-                    href="#"
-                    className="text-popover-foreground hover:bg-accent block px-4 py-2 text-sm transition-colors"
-                  >
-                    Wishlist
-                  </a>
-                  <a
-                    href="#"
-                    className="text-popover-foreground hover:bg-accent block px-4 py-2 text-sm transition-colors"
-                  >
-                    Settings
-                  </a> */}
-                </div>
-              )}
-            </div>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Account">
+                  <User size={20} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2" align="end">
+                {customer ? (
+                  <>
+                    <div className="px-2 py-2">
+                      <p className="text-sm font-medium">
+                        {customer.data.name}
+                      </p>
+                      <p className="text-muted-foreground truncate text-xs">
+                        {customer.data.email}
+                      </p>
+                    </div>
+                    <Separator className="my-2" />
+                    <Link
+                      href="/account"
+                      className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"
+                      onClick={() => setAccountDropdownOpen(false)}
+                    >
+                      My Account
+                    </Link>
+                    <Link
+                      href="/orders"
+                      className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"
+                      onClick={() => setAccountDropdownOpen(false)}
+                    >
+                      Orders
+                    </Link>
+                    <Separator className="my-2" />
+                    <Button
+                      variant="ghost"
+                      onClick={handleLogout}
+                      className="h-auto w-full justify-start px-2 py-2 text-sm font-normal"
+                    >
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"
+                      onClick={() => setAccountDropdownOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"
+                      onClick={() => setAccountDropdownOpen(false)}
+                    >
+                      Create Account
+                    </Link>
+                  </>
+                )}
+              </PopoverContent>
+            </Popover>
 
             {/* Cart */}
-            <Link
-              href="/cart"
-              className="hover:bg-accent relative rounded-md p-2 transition-colors"
-            >
-              <ShoppingCart size={20} />
-              <span className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold">
-                {totalItems}
-              </span>
-            </Link>
+            <Button variant="ghost" size="icon" asChild className="relative">
+              <Link href="/cart">
+                <ShoppingCart size={20} />
+                {totalItems > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute -top-1 -right-1 h-5 min-w-5 rounded-full px-1 text-xs"
+                  >
+                    {totalItems}
+                  </Badge>
+                )}
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="border-border bg-background border-t lg:hidden">
-          <div className="space-y-3 px-4 pt-4 pb-6">
-            {navigationLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="hover:bg-accent block rounded-md px-3 py-2 text-base font-medium transition-colors"
-              >
-                {link.name}
-              </a>
-            ))}
-
-            {/* Mobile-only links */}
-            <hr className="border-border my-4" />
-            <a
-              href="#"
-              className="hover:bg-accent block rounded-md px-3 py-2 text-base font-medium transition-colors"
-            >
-              Wishlist
-            </a>
-            <a
-              href="#"
-              className="hover:bg-accent block rounded-md px-3 py-2 text-base font-medium transition-colors"
-            >
-              My Orders
-            </a>
-          </div>
-        </div>
-      )}
     </nav>
   );
 }

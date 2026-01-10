@@ -450,6 +450,7 @@ export default function ProductDetails() {
           <div className="mt-12">
             <h2 className="mb-4 text-2xl font-bold">Product Description</h2>
             <div
+              id="content-display"
               className="prose prose-sm border-border bg-card max-w-none rounded-lg border p-6"
               dangerouslySetInnerHTML={{ __html: product.productDescription }}
             />

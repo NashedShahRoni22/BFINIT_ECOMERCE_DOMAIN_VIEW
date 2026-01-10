@@ -2,7 +2,7 @@ import SectionRenderer from "@/components/core/SectionRenderer";
 
 export default async function Home() {
   const data = await fetch(
-    "https://ecomback.bfinit.com/store/theme/data/695a0774722618f178d3d14c",
+    "https://ecomback.bfinit.com/store/theme/data/695e08b54bf6001a986a4bde",
   );
 
   const sections = await data.json();

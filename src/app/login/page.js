@@ -1,6 +1,9 @@
 "use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, Loader2, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,16 +15,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import toast from "react-hot-toast";
+import useAuth from "@/hooks/useAuth";
+import { staticStoreId } from "@/utils/storeId";
 
-export default function Login() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
-
+export default function Login({ storeId }) {
+  const router = useRouter();
+  const { saveAuthInfo } = useAuth();
+  const [isPending, setIsPending] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
   const handleInputChange = (e) => {
@@ -53,35 +58,54 @@ export default function Login() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!validateForm()) return;
 
-    toast.success("Login coming soon");
+    setIsPending(true);
+    setErrors({});
+
+    try {
+      const response = await fetch(
+        `https://ecomback.bfinit.com/customer/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            storeid: staticStoreId,
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      if (data.message === "Authentication Successfully") {
+        toast.success("Login success!");
+        saveAuthInfo(data);
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      setErrors({
+        submit: error.message || "Invalid email or password. Please try again.",
+      });
+    } finally {
+      setIsPending(false);
+    }
   };
 
-  //   const handleKeyPress = (e) => {
-  //     if (e.key === "Enter" && !isPending) {
-  //       handleLogin();
-  //     }
-  //   };
-
-  if (loginSuccess) {
-    return (
-      <div className="bg-muted flex min-h-screen items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6 text-center">
-            <div className="bg-success/10 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full">
-              <CheckCircle2 className="text-success h-8 w-8" />
-            </div>
-            <h2 className="mb-2 text-2xl font-bold">Welcome Back!</h2>
-            <p className="text-muted-foreground mb-6">
-              Login successful. Redirecting to dashboard...
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !isPending) {
+      handleLogin();
+    }
+  };
 
   return (
     <div className="bg-muted flex min-h-screen items-center justify-center p-4">
@@ -114,9 +138,9 @@ export default function Login() {
                     placeholder="john@example.com"
                     value={formData.email}
                     onChange={handleInputChange}
-                    // onKeyPress={handleKeyPress}
+                    onKeyPress={handleKeyPress}
                     className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
-                    // disabled={isPending}
+                    disabled={isPending}
                   />
                 </div>
                 {errors.email && (
@@ -128,12 +152,12 @@ export default function Login() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <a
-                    href="/forgot-password"
+                  <Link
+                    href={`/${storeId}/forgot-password`}
                     className="text-muted-foreground hover:text-foreground text-xs hover:underline"
                   >
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
                 <div className="relative">
                   <Lock className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -144,15 +168,15 @@ export default function Login() {
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={handleInputChange}
-                    // onKeyPress={handleKeyPress}
+                    onKeyPress={handleKeyPress}
                     className={`pr-10 pl-10 ${errors.password ? "border-destructive" : ""}`}
-                    // disabled={isPending}
+                    disabled={isPending}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
-                    // disabled={isPending}
+                    disabled={isPending}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -178,21 +202,28 @@ export default function Login() {
                 onClick={handleLogin}
                 className="w-full"
                 size="lg"
-                // disabled={isPending}
+                disabled={isPending}
               >
-                Login
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
               </Button>
             </div>
 
             {/* Sign Up Link */}
             <p className="text-muted-foreground mt-6 text-center text-sm">
-              Don't have an account?{" "}
-              <a
+              Don&apos;t have an account?{" "}
+              <Link
                 href="/signup"
                 className="text-foreground font-medium hover:underline"
               >
                 Sign up
-              </a>
+              </Link>
             </p>
           </CardContent>
         </Card>
@@ -200,13 +231,16 @@ export default function Login() {
         {/* Terms */}
         <p className="text-muted-foreground mt-6 text-center text-xs">
           By logging in, you agree to our{" "}
-          <a href="/terms" className="hover:text-foreground underline">
+          <Link
+            href="/terms-and-conditions"
+            className="hover:text-foreground underline"
+          >
             Terms of Service
-          </a>{" "}
+          </Link>{" "}
           and{" "}
-          <a href="/privacy" className="hover:text-foreground underline">
+          <Link href="/privacy" className="hover:text-foreground underline">
             Privacy Policy
-          </a>
+          </Link>
         </p>
       </div>
     </div>

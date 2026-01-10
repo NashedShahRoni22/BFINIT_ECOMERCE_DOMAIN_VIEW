@@ -3,8 +3,13 @@ import { useContext } from "react";
 import { Minus, Plus, X, ShoppingBag, ArrowRight, Tag } from "lucide-react";
 import { CartContext } from "@/context/CartContext";
 import Link from "next/link";
+import useAuth from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function Cart() {
+  const { customer } = useAuth();
   const {
     cartItems,
     removeFromCart,
@@ -14,6 +19,8 @@ export default function Cart() {
     totalSavings,
     getItemPrice,
   } = useContext(CartContext);
+
+  const router = useRouter();
 
   if (cartItems.length === 0) {
     return (
@@ -27,7 +34,7 @@ export default function Cart() {
             </div>
             <h2 className="mb-3 text-3xl font-bold">Your cart is empty</h2>
             <p className="text-muted-foreground mb-8">
-              Looks like you haven't added anything to your cart yet
+              Looks like you haven&apos;t added anything to your cart yet
             </p>
             <Link
               href="/shop"
@@ -43,6 +50,14 @@ export default function Cart() {
   }
 
   const total = subtotal;
+
+  const handleCheckout = () => {
+    if (customer?.token) {
+      return router.push("/checkout");
+    }
+
+    router.push("/login");
+  };
 
   return (
     <div className="bg-background min-h-screen">
@@ -76,11 +91,12 @@ export default function Cart() {
                 >
                   <div className="flex gap-4">
                     {/* Product Image */}
-                    <div className="bg-muted relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md lg:h-32 lg:w-32">
-                      <img
+                    <div className="bg-muted relative h-24 w-24 shrink-0 overflow-hidden rounded-md lg:h-32 lg:w-32">
+                      <Image
                         src={`https://ecomback.bfinit.com${item.thumbnailImage}`}
                         alt={item.productName}
-                        className="h-full w-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                       {hasDiscount && (
                         <div className="absolute top-2 left-2">
@@ -224,13 +240,13 @@ export default function Cart() {
                 </div>
 
                 {/* Checkout Button */}
-                <Link
-                  href="/login"
+                <Button
+                  onClick={handleCheckout}
                   className="bg-foreground text-background hover:bg-foreground/90 mt-6 flex w-full items-center justify-center gap-2 rounded-md px-6 py-3.5 text-sm font-semibold transition-colors"
                 >
                   Proceed to Checkout
                   <ArrowRight className="h-4 w-4" />
-                </Link>
+                </Button>
 
                 {/* Continue Shopping */}
                 <Link

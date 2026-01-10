@@ -1,9 +1,5 @@
-import Hero from "@/components/sections/about/Hero";
+import ContentPage from "@/components/sections/content/ContentPage";
 
 export default function About() {
-  return (
-    <div>
-      <Hero />
-    </div>
-  );
+  return <ContentPage title="About Us" />;
 }

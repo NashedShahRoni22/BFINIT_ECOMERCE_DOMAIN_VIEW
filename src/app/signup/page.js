@@ -1,4 +1,7 @@
 "use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Eye,
@@ -20,10 +23,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import toast from "react-hot-toast";
+import { staticStoreId } from "@/utils/storeId";
+import useAuth from "@/hooks/useAuth";
 
-export default function SignUpPage() {
-  const isPending = false;
-
+export default function SignUpPage({ storeId }) {
+  const router = useRouter();
+  const { saveAuthInfo } = useAuth();
+  const [isPending, setIsPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
 
@@ -73,34 +79,53 @@ export default function SignUpPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     if (!validateForm()) return;
 
-    toast.success("Need to fix backend");
+    setIsPending(true);
+    setErrors({});
 
-    // mutate(
-    //   {
-    //     name: formData.name,
-    //     email: formData.email,
-    //     password: formData.password,
-    //   },
-    //   {
-    //     onSuccess: (data) => {
-    //       console.log("Sign up successful:", data);
+    try {
+      const response = await fetch(
+        `https://ecomback.bfinit.com/customer/auth/onboard`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            storeid: staticStoreId,
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+          }),
+        },
+      );
 
-    //       setSignupSuccess(true);
-    //     },
-    //     onError: (error) => {
-    //       console.error("Error during sign up:", error);
-    //       setErrors({
-    //         submit:
-    //           error?.response?.data?.message ||
-    //           error.message ||
-    //           "Failed to sign up. Please try again.",
-    //       });
-    //     },
-    //   },
-    // );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Sign up failed");
+      }
+
+      console.log("Sign up successful:", data);
+      toast.success("Account created successfully!");
+      setSignupSuccess(true);
+
+      // Save auth info and redirect to home
+      saveAuthInfo(data);
+
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
+    } catch (error) {
+      console.error("Error during sign up:", error);
+      setErrors({
+        submit: error.message || "Failed to sign up. Please try again.",
+      });
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -111,16 +136,15 @@ export default function SignUpPage() {
 
   if (signupSuccess) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
+      <div className="bg-muted flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
-            <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            <div className="bg-primary/10 text-primary mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full">
+              <CheckCircle2 className="h-8 w-8" />
             </div>
             <h2 className="mb-2 text-2xl font-bold">Account Created!</h2>
-            <p className="mb-6 text-neutral-600">
-              Your account has been created successfully. Redirecting to
-              login...
+            <p className="text-muted-foreground mb-6">
+              Your account has been created successfully. Redirecting...
             </p>
           </CardContent>
         </Card>
@@ -129,14 +153,12 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
+    <div className="bg-muted flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="mb-2 text-3xl font-bold text-neutral-900">
-            Create Account
-          </h1>
-          <p className="text-neutral-600">Sign up to get started</p>
+          <h1 className="mb-2 text-3xl font-bold">Create Account</h1>
+          <p className="text-muted-foreground">Sign up to get started</p>
         </div>
 
         {/* Sign Up Card */}
@@ -153,7 +175,7 @@ export default function SignUpPage() {
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <div className="relative">
-                  <User className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                  <User className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                   <Input
                     id="name"
                     name="name"
@@ -162,12 +184,12 @@ export default function SignUpPage() {
                     value={formData.name}
                     onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
-                    className={`pl-10 ${errors.name ? "border-red-500" : ""}`}
+                    className={`pl-10 ${errors.name ? "border-destructive" : ""}`}
                     disabled={isPending}
                   />
                 </div>
                 {errors.name && (
-                  <p className="text-xs text-red-500">{errors.name}</p>
+                  <p className="text-destructive text-xs">{errors.name}</p>
                 )}
               </div>
 
@@ -175,7 +197,7 @@ export default function SignUpPage() {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                  <Mail className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                   <Input
                     id="email"
                     name="email"
@@ -184,12 +206,12 @@ export default function SignUpPage() {
                     value={formData.email}
                     onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
-                    className={`pl-10 ${errors.email ? "border-red-500" : ""}`}
+                    className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
                     disabled={isPending}
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-xs text-red-500">{errors.email}</p>
+                  <p className="text-destructive text-xs">{errors.email}</p>
                 )}
               </div>
 
@@ -197,7 +219,7 @@ export default function SignUpPage() {
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                  <Lock className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                   <Input
                     id="password"
                     name="password"
@@ -206,13 +228,13 @@ export default function SignUpPage() {
                     value={formData.password}
                     onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
-                    className={`pr-10 pl-10 ${errors.password ? "border-red-500" : ""}`}
+                    className={`pr-10 pl-10 ${errors.password ? "border-destructive" : ""}`}
                     disabled={isPending}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 text-neutral-500 hover:text-neutral-700"
+                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                     disabled={isPending}
                   >
                     {showPassword ? (
@@ -223,17 +245,17 @@ export default function SignUpPage() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-xs text-red-500">{errors.password}</p>
+                  <p className="text-destructive text-xs">{errors.password}</p>
                 )}
-                <p className="text-xs text-neutral-500">
+                <p className="text-muted-foreground text-xs">
                   Must be at least 6 characters
                 </p>
               </div>
 
               {/* Submit Error */}
               {errors.submit && (
-                <div className="rounded-md border border-red-200 bg-red-50 p-3">
-                  <p className="text-sm text-red-600">{errors.submit}</p>
+                <div className="border-destructive/50 bg-destructive/10 rounded-md border p-3">
+                  <p className="text-destructive text-sm">{errors.submit}</p>
                 </div>
               )}
 
@@ -256,28 +278,31 @@ export default function SignUpPage() {
             </div>
 
             {/* Sign In Link */}
-            <p className="mt-6 text-center text-sm text-neutral-600">
+            <p className="text-muted-foreground mt-6 text-center text-sm">
               Already have an account?{" "}
-              <a
+              <Link
                 href="/login"
-                className="font-medium text-neutral-900 hover:underline"
+                className="text-foreground font-medium hover:underline"
               >
                 Sign in
-              </a>
+              </Link>
             </p>
           </CardContent>
         </Card>
 
         {/* Terms */}
-        <p className="mt-6 text-center text-xs text-neutral-500">
+        <p className="text-muted-foreground mt-6 text-center text-xs">
           By signing up, you agree to our{" "}
-          <a href="/terms" className="underline hover:text-neutral-700">
+          <Link
+            href="/terms-and-conditions"
+            className="hover:text-foreground underline"
+          >
             Terms of Service
-          </a>{" "}
+          </Link>{" "}
           and{" "}
-          <a href="/privacy" className="underline hover:text-neutral-700">
+          <Link href="/privacy" className="hover:text-foreground underline">
             Privacy Policy
-          </a>
+          </Link>
         </p>
       </div>
     </div>

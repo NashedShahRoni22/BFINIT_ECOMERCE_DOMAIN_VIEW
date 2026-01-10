@@ -58,10 +58,10 @@ export default function FooterDefault({ content }) {
                   <span>{contact?.mobile}</span>
                 </a>
 
-                <di className="text-muted-foreground flex items-start gap-2">
+                <div className="text-muted-foreground flex items-start gap-2">
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
                   <span className="leading-relaxed">{contact?.address}</span>
-                </di>
+                </div>
               </div>
             )}
           </div>

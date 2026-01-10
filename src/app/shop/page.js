@@ -3,8 +3,8 @@ import { useState, useMemo } from "react";
 import { Grid3x3, LayoutGrid, List, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { storeId } from "@/utils/contstants";
 import ProductCard from "@/components/cards/products/ProductCard";
+import { staticStoreId } from "@/utils/storeId";
 
 const gridLayoutMap = {
   2: "grid-cols-1 sm:grid-cols-2",
@@ -15,7 +15,7 @@ const gridLayoutMap = {
 
 const fetchAllProducts = async (currentPage, productsPerPage) => {
   const response = await fetch(
-    `https://ecomback.bfinit.com/product/store?storeId=${storeId}&page=${currentPage}&limit=${productsPerPage}`,
+    `https://ecomback.bfinit.com/product/store?storeId=${staticStoreId}&page=${currentPage}&limit=${productsPerPage}`,
   );
   if (!response.ok) {
     throw new Error("Network response was not ok");
@@ -37,8 +37,8 @@ export default function Shop() {
   // Fetch products
   const { data: productsData, isLoading } = useQuery({
     queryFn: () => fetchAllProducts(currentPage, productsPerPage),
-    queryKey: ["shop-products", storeId, currentPage],
-    enabled: !!storeId,
+    queryKey: ["shop-products", staticStoreId, currentPage],
+    enabled: !!staticStoreId,
   });
 
   const products = productsData?.data?.length > 0 ? productsData.data : [];

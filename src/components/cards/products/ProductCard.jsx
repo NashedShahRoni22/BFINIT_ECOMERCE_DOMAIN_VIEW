@@ -90,12 +90,14 @@ export default function ProductCard({ product }) {
       {/* Image Container */}
       <div className="bg-muted relative aspect-square overflow-hidden">
         {thumbnailImage ? (
-          <Image
-            src={`https://ecomback.bfinit.com${thumbnailImage}`}
-            alt={productName}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
-          />
+          <Link href={`/shop/${productId}`} className="h-full w-full">
+            <Image
+              src={`https://ecomback.bfinit.com${thumbnailImage}`}
+              alt={productName}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          </Link>
         ) : (
           <div className="bg-muted flex aspect-square w-full items-center justify-center rounded-lg">
             <ImageIcon
