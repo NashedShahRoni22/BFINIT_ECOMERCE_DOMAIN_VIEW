@@ -30,6 +30,9 @@ export default async function ContentPage({ title, apiEndpoint, storeId }) {
     return <EmptyContent title={title} />;
   }
 
+  const content =
+    data?.data?.aboutDescription || data?.data?.faqDescription || data?.data;
+
   return (
     <div>
       <Hero title={title} />
@@ -40,7 +43,7 @@ export default async function ContentPage({ title, apiEndpoint, storeId }) {
       >
         <article
           className="prose prose-neutral dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: data.data }}
+          dangerouslySetInnerHTML={{ __html: content }}
         />
       </div>
     </div>

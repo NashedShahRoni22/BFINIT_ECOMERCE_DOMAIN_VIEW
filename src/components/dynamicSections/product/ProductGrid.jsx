@@ -58,23 +58,25 @@ export default function ProductGrid({ content }) {
   }
 
   return (
-    <div className="bg-muted px-8 py-16">
-      {content?.showTitle && (
-        <h2 className="mb-10 text-center text-4xl font-bold">
-          {content.title}
-        </h2>
-      )}
-      <div
-        className={cn(
-          "mx-auto grid max-w-7xl gap-6",
-          gridColsMap[content?.columns],
+    <div className="bg-muted">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        {content?.showTitle && (
+          <h2 className="mb-10 text-center text-4xl font-bold">
+            {content.title}
+          </h2>
         )}
-      >
-        {mainProducts
-          ?.slice(0, parseInt(content?.productsToShow))
-          ?.map((product) => (
-            <ProductCard key={product?._id} product={product} />
-          ))}
+        <div
+          className={cn(
+            "mx-auto grid max-w-7xl gap-6",
+            gridColsMap[content?.columns],
+          )}
+        >
+          {mainProducts
+            ?.slice(0, parseInt(content?.productsToShow))
+            ?.map((product) => (
+              <ProductCard key={product?._id} product={product} />
+            ))}
+        </div>
       </div>
     </div>
   );

@@ -13,7 +13,6 @@ export default async function Home() {
   return (
     <div>
       <SectionRenderer sections={sections?.data?.sections?.body} />
-      <p>current host: {host}</p>
     </div>
   );
 }

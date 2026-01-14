@@ -120,13 +120,13 @@ export default function NavbarSimple({ content }) {
                       </p>
                     </div>
                     <Separator className="my-2" />
-                    <Link
+                    {/* <Link
                       href="/account"
                       className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"
                       onClick={() => setAccountDropdownOpen(false)}
                     >
                       My Account
-                    </Link>
+                    </Link> */}
                     <Link
                       href="/orders"
                       className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"

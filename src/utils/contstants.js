@@ -17,8 +17,6 @@ export const footerLinks = {
     { label: "Return Policy", url: "/support/return-policy" },
     { label: "Legal & Terms", url: "/support/terms-and-conditions" },
     { label: "Shopping Guide", url: "/support/shopping-guide" },
+    { label: "FAQ", url: "/support/faq" },
   ],
 };
-
-// TODO: remove the storeid
-export const storeId = "695a0774722618f178d3d14c";

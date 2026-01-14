@@ -1,5 +1,4 @@
 "use client";
-
 import { useQuery } from "@tanstack/react-query";
 import Hero from "@/components/sections/contact/Hero";
 import ContactInfo from "@/components/sections/contact/ContactInfo";

@@ -14,6 +14,7 @@ import { getDiscountPercent } from "@/utils/products";
 import useCart from "@/hooks/useCart";
 import Link from "next/link";
 import Image from "next/image";
+import useGetStorePreference from "@/hooks/useGetStorePreference";
 
 export default function ProductCard({ product }) {
   const {
@@ -32,6 +33,10 @@ export default function ProductCard({ product }) {
     limited_stock,
     variants,
   } = product || {};
+
+  const { data: storePreference } = useGetStorePreference();
+
+  const currencySymbol = storePreference?.data?.currencySymbol;
 
   const { addToCart } = useCart();
 
@@ -191,11 +196,11 @@ export default function ProductCard({ product }) {
           <div className="flex flex-col">
             <div className="flex items-baseline gap-2">
               <span className="text-lg font-bold">
-                {formatPrice(originalPrice)}
+                {formatPrice(originalPrice, currencySymbol)}
               </span>
               {originalDiscount > 0 && (
                 <span className="text-muted-foreground text-xs line-through">
-                  {formatPrice(originalDiscount)}
+                  {formatPrice(originalDiscount, currencySymbol)}
                 </span>
               )}
             </div>

@@ -2,6 +2,9 @@ import { ShoppingBag, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import useGetStorePreference from "@/hooks/useGetStorePreference";
+import Image from "next/image";
+import { formatPrice } from "@/utils/formatPrice";
 
 export default function OrderSummary({
   subtotal,
@@ -9,6 +12,10 @@ export default function OrderSummary({
   handlePlaceOrder,
   cartItems,
 }) {
+  const { data: storePreference } = useGetStorePreference();
+
+  const currencySymbol = storePreference?.data?.currencySymbol;
+
   return (
     <div className="lg:col-span-1">
       <Card className="sticky top-8">
@@ -23,12 +30,13 @@ export default function OrderSummary({
           <div className="space-y-3">
             {cartItems.map((item) => (
               <div key={item.id} className="flex gap-3">
-                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-neutral-100">
+                <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-neutral-100">
                   {item.thumbnailImage ? (
-                    <img
+                    <Image
                       src={`https://ecomback.bfinit.com${item.thumbnailImage}`}
                       alt={item.productName}
-                      className="h-full w-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <ShoppingBag className="h-6 w-6 text-neutral-400" />
@@ -47,13 +55,19 @@ export default function OrderSummary({
                     Qty: {item.quantity}
                   </p>
                 </div>
-                <div className="flex-shrink-0 text-right">
+                <div className="shrink-0 text-right">
                   <p className="text-sm font-medium text-neutral-900">
-                    €{(item.discountPrice * item.quantity).toFixed(2)}
+                    {formatPrice(
+                      item.discountPrice * item.quantity,
+                      currencySymbol,
+                    )}
                   </p>
                   {item.unitPrice > item.discountPrice && (
                     <p className="text-xs text-neutral-500 line-through">
-                      €{(item.unitPrice * item.quantity).toFixed(2)}
+                      {formatPrice(
+                        item.unitPrice * item.quantity,
+                        currencySymbol,
+                      )}
                     </p>
                   )}
                 </div>
@@ -67,7 +81,7 @@ export default function OrderSummary({
           <div className="space-y-2 text-sm">
             <div className="flex justify-between text-neutral-600">
               <span>Subtotal</span>
-              <span>€{subtotal}</span>
+              <span>{formatPrice(subtotal, currencySymbol)}</span>
             </div>
             {/* <div className="flex justify-between text-neutral-600">
                     <span>Shipping</span>
@@ -91,7 +105,7 @@ export default function OrderSummary({
 
           <div className="flex justify-between text-lg font-bold">
             <span>Total</span>
-            <span>€{subtotal.toFixed(2)}</span>
+            <span>{formatPrice(subtotal, currencySymbol)}</span>
           </div>
 
           <Button

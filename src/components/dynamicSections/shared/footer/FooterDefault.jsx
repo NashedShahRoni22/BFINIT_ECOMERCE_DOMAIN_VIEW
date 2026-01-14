@@ -11,6 +11,11 @@ import {
 } from "lucide-react";
 import { footerLinks } from "@/utils/contstants";
 
+const extractStoreName = (copyrightText) => {
+  const match = copyrightText.match(/©\s+\d{4}\s+(.+?)\./);
+  return match ? match[1].trim() : "";
+};
+
 export default function FooterDefault({ content }) {
   const {
     description,
@@ -34,7 +39,9 @@ export default function FooterDefault({ content }) {
         <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5 lg:gap-12">
           {/* Company Info */}
           <div className="lg:col-span-2">
-            <h3 className="mb-3 text-lg font-semibold">Agatha Store</h3>
+            <h3 className="mb-3 text-lg font-semibold">
+              {extractStoreName(copyright)}
+            </h3>
             <p className="text-muted-foreground mb-6 max-w-md text-sm leading-relaxed">
               {description}
             </p>
