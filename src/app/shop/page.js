@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import ProductCard from "@/components/cards/products/ProductCard";
 import { staticStoreId } from "@/utils/storeId";
+import useGetStorePreference from "@/hooks/useGetStorePreference";
 
 const gridLayoutMap = {
   2: "grid-cols-1 sm:grid-cols-2",
@@ -46,6 +47,9 @@ export default function Shop() {
     queryKey: ["shop-products", staticStoreId, currentPage],
     enabled: !!staticStoreId,
   });
+
+  const { data: storePreference } = useGetStorePreference();
+  const currencySymbol = storePreference?.data?.currencySymbol;
 
   const products = productsData?.data?.length > 0 ? productsData.data : [];
   const totalPages = productsData?.totalPages || 1;
@@ -265,8 +269,14 @@ export default function Shop() {
                     className="w-full"
                   />
                   <div className="text-muted-foreground flex items-center justify-between text-sm">
-                    <span>${priceRange[0]}</span>
-                    <span>${priceRange[1]}</span>
+                    <span>
+                      {currencySymbol}
+                      {priceRange[0]}
+                    </span>
+                    <span>
+                      {currencySymbol}
+                      {priceRange[1]}
+                    </span>
                   </div>
                 </div>
               </div>

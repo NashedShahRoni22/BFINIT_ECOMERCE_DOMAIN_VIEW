@@ -7,8 +7,9 @@ import OrderSummary from "@/components/checkout/OrderSummary";
 import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import { staticStoreId } from "@/utils/storeId";
+import useGetStorePreference from "@/hooks/useGetStorePreference";
 
-export default function CheckoutPage({ storeId }) {
+export default function CheckoutPage() {
   const router = useRouter();
   const { customer } = useAuth();
 
@@ -19,9 +20,13 @@ export default function CheckoutPage({ storeId }) {
   const [selectedCountry, setSelectedCountry] = useState("");
   const [currencyCode, setCurrencyCode] = useState("EUR");
   const [countryData, setCountryData] = useState(null);
+  const [bankDetails, setBankDetails] = useState(null);
+  const [isBankDetailsLoading, setIsBankDetailsLoading] = useState(true);
   const [isPending, setIsPending] = useState(false);
   const [isStripePending, setIsStripePending] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
+
+  const { data: storePreference } = useGetStorePreference();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -58,6 +63,28 @@ export default function CheckoutPage({ storeId }) {
     };
 
     fetchCountries();
+  }, []);
+
+  // Fetch bank details on mount
+  useEffect(() => {
+    const fetchBankDetails = async () => {
+      try {
+        setIsBankDetailsLoading(true);
+        const response = await fetch(
+          `https://ecomback.bfinit.com/bankpayment/public/${staticStoreId}`,
+        );
+        if (!response.ok) throw new Error("Failed to fetch bank details");
+        const result = await response.json();
+        setBankDetails(result?.data);
+      } catch (error) {
+        console.error("Error fetching bank details:", error);
+        // Don't show error toast - bank details are optional
+      } finally {
+        setIsBankDetailsLoading(false);
+      }
+    };
+
+    fetchBankDetails();
   }, []);
 
   // Fetch country data when selected country changes
@@ -157,7 +184,7 @@ export default function CheckoutPage({ storeId }) {
           discountTotal: 0,
           grandTotal: parseFloat(subtotal.toFixed(2)),
         },
-        currencyCode: currencyCode,
+        currencyCode: storePreference?.data?.currencyCode,
         payment: {
           method: "COD",
         },
@@ -181,12 +208,70 @@ export default function CheckoutPage({ storeId }) {
 
         if (!response.ok) throw new Error("Failed to create COD order");
 
-        toast.success("Order created successfully");
+        toast.success("Order placed successfully!");
         clearCart();
         router.push("/shop");
       } catch (error) {
         console.error("COD order error:", error);
-        toast.error("Failed to create order");
+        toast.error("Failed to place order. Please try again.");
+      } finally {
+        setIsPending(false);
+      }
+    } else if (paymentMethod === "Bank") {
+      setIsPending(true);
+      requestBody = {
+        products: cartItems.map((item) => ({
+          productId: item.productId,
+          productName: item.productName,
+          hasVariants: item.hasVariants,
+          variant: item.variant,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discountPrice: item.discountPrice,
+          taxAmount: 0,
+          lineTotal: parseFloat(
+            (item.discountPrice * item.quantity).toFixed(2),
+          ),
+        })),
+        pricingSummary: {
+          subTotal: parseFloat(subtotal.toFixed(2)),
+          shippingCharges: 0,
+          taxTotal: 0,
+          discountTotal: 0,
+          grandTotal: parseFloat(subtotal.toFixed(2)),
+        },
+        currencyCode: storePreference?.data?.currencyCode,
+        payment: {
+          method: "Bank Transfer",
+          status: "Pending",
+        },
+        shippingDetails: formData,
+      };
+
+      try {
+        const response = await fetch(
+          `https://ecomback.bfinit.com/v2/store/global/orders/create/cod`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${customer?.token}`,
+              customerid: customer?.data?.customerId,
+              storeid: staticStoreId,
+            },
+            body: JSON.stringify(requestBody),
+          },
+        );
+
+        if (!response.ok)
+          throw new Error("Failed to create bank transfer order");
+
+        toast.success("Order created! Please complete the bank transfer.");
+        clearCart();
+        router.push("/shop");
+      } catch (error) {
+        console.error("Bank transfer order error:", error);
+        toast.error("Failed to create order. Please try again.");
       } finally {
         setIsPending(false);
       }
@@ -213,12 +298,10 @@ export default function CheckoutPage({ storeId }) {
           {
             method: "POST",
             headers: {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${customer?.token}`,
-                customerid: customer?.data?.customerId,
-                storeid: staticStoreId,
-              },
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${customer?.token}`,
+              customerid: customer?.data?.customerId,
+              storeid: staticStoreId,
             },
             body: JSON.stringify(requestBody),
           },
@@ -227,13 +310,13 @@ export default function CheckoutPage({ storeId }) {
         if (!response.ok) throw new Error("Failed to create online order");
 
         const data = await response.json();
-        toast.success("Order created successfully");
+        toast.success("Redirecting to payment gateway...");
         console.log(data);
         clearCart();
         router.push("/shop");
       } catch (error) {
         console.error("Stripe order error:", error);
-        toast.error("Failed to create order");
+        toast.error("Failed to initiate payment. Please try again.");
       } finally {
         setIsStripePending(false);
       }
@@ -259,6 +342,8 @@ export default function CheckoutPage({ storeId }) {
             isCountriesLoading={isCountriesLoading}
             countryData={countryData}
             onCountryChange={handleCountryChange}
+            bankDetails={bankDetails}
+            isBankDetailsLoading={isBankDetailsLoading}
           />
 
           <OrderSummary

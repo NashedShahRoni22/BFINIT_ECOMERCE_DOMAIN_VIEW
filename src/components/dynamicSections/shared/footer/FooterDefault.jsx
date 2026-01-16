@@ -95,7 +95,7 @@ export default function FooterDefault({ content }) {
           )}
 
           {/* Shop Links */}
-          {shop && shop.length > 0 && (
+          {/* {shop && shop.length > 0 && (
             <div>
               <h4 className="mb-4 text-sm font-semibold tracking-wider uppercase">
                 Shop
@@ -113,7 +113,7 @@ export default function FooterDefault({ content }) {
                 ))}
               </ul>
             </div>
-          )}
+          )} */}
 
           {/* Support Links */}
           {support && support.length > 0 && (
@@ -122,7 +122,27 @@ export default function FooterDefault({ content }) {
                 Support
               </h4>
               <ul className="space-y-3">
-                {support.map((link, index) => (
+                {support.slice(0, 3).map((link, index) => (
+                  <li key={index}>
+                    <Link
+                      href={link.url}
+                      className="text-muted-foreground hover: inline-block text-sm transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {support && support.length > 0 && (
+            <div>
+              <h4 className="mb-4 text-sm font-semibold tracking-wider text-transparent uppercase">
+                Support
+              </h4>
+              <ul className="space-y-3">
+                {support.slice(3, 6).map((link, index) => (
                   <li key={index}>
                     <Link
                       href={link.url}

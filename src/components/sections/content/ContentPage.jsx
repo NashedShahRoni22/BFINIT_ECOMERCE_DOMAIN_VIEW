@@ -31,7 +31,10 @@ export default async function ContentPage({ title, apiEndpoint, storeId }) {
   }
 
   const content =
-    data?.data?.aboutDescription || data?.data?.faqDescription || data?.data;
+    data?.data?.aboutDescription ||
+    data?.data?.faqDescription ||
+    data?.data?.description ||
+    data?.data;
 
   return (
     <div>

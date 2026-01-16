@@ -18,5 +18,6 @@ export const footerLinks = {
     { label: "Legal & Terms", url: "/support/terms-and-conditions" },
     { label: "Shopping Guide", url: "/support/shopping-guide" },
     { label: "FAQ", url: "/support/faq" },
+    { label: "Privacy Policy", url: "/support/privacy" },
   ],
 };

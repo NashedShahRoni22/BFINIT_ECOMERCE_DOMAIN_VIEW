@@ -13,12 +13,12 @@ const geist = Geist({
 
 export async function generateMetadata() {
   const data = await fetch(
-    "https://ecomback.bfinit.com/v2/store/global/meta/store",
+    `https://ecomback.bfinit.com/meta/store/?storeId=${staticStoreId}`,
     { cache: "no-store" },
   );
 
   const sections = await data.json();
-  const metaInfo = sections?.data?.data?.[0];
+  const metaInfo = sections?.data?.[0];
 
   return {
     title: metaInfo?.Title || "BFINIT - Start Your Online Store Today",
