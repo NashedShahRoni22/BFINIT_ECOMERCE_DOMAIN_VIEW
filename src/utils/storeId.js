@@ -1,1 +1,1 @@
-export const staticStoreId = "695e08b54bf6001a986a4bde";
+export const staticStoreId = "695b75e764517ee399752724";

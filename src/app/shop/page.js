@@ -1,19 +1,13 @@
 "use client";
 import { useState, useMemo } from "react";
-import {
-  Columns2,
-  Columns3,
-  Grid3x3,
-  LayoutGrid,
-  List,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
+import { Columns2, Columns3, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import ProductCard from "@/components/cards/products/ProductCard";
 import { staticStoreId } from "@/utils/storeId";
 import useGetStorePreference from "@/hooks/useGetStorePreference";
+import useGetCategories from "@/hooks/useGetCategories";
+import useGetBrands from "@/hooks/useGetBrands";
 
 const gridLayoutMap = {
   2: "grid-cols-1 sm:grid-cols-2",
@@ -36,63 +30,62 @@ export default function Shop() {
   const [sortBy, setSortBy] = useState("default");
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 10000]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedSubcategories, setSelectedSubcategories] = useState([]);
   const [selectedBrands, setSelectedBrands] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
   const productsPerPage = 20;
 
-  // Fetch products
+  // Fetch data
+  const { data: categoriesData, isLoading: isCategoriesLoading } =
+    useGetCategories();
+  const { data: brandsData, isLoading: isBrandsLoading } = useGetBrands();
   const { data: productsData, isLoading } = useQuery({
     queryFn: () => fetchAllProducts(currentPage, productsPerPage),
     queryKey: ["shop-products", staticStoreId, currentPage],
     enabled: !!staticStoreId,
   });
-
   const { data: storePreference } = useGetStorePreference();
-  const currencySymbol = storePreference?.data?.currencySymbol;
 
+  const currencySymbol = storePreference?.data?.currencySymbol;
   const products = productsData?.data?.length > 0 ? productsData.data : [];
   const totalPages = productsData?.totalPages || 1;
 
-  // Extract unique values for filters
-  const { categories, brands } = useMemo(() => {
-    const cats = [
-      ...new Set(products.map((p) => p.productCategory).filter(Boolean)),
-    ];
-    const brds = [
-      ...new Set(
-        products
-          .map((p) => p.productBrand)
-          .filter((b) => b && b !== "Undefined"),
-      ),
-    ];
-    const tgs = [...new Set(products.flatMap((p) => p.tags || []))];
-    return { categories: cats, brands: brds, tags: tgs };
-  }, [products]);
+  // Get categories and brands from API
+  const categories = categoriesData?.data || [];
+  const brands = brandsData?.data || [];
+
+  // Get subcategories for selected category
+  const availableSubcategories = useMemo(() => {
+    if (!selectedCategory) return [];
+    const category = categories.find((cat) => cat.id === selectedCategory);
+    return category?.subcategory || [];
+  }, [selectedCategory, categories]);
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
 
     // Category filter
-    if (selectedCategories.length > 0) {
+    if (selectedCategory) {
+      const categoryName = categories.find(
+        (cat) => cat.id === selectedCategory,
+      )?.name;
+      filtered = filtered.filter((p) => p.productCategory === categoryName);
+    }
+
+    // Subcategory filter
+    if (selectedSubcategories.length > 0) {
       filtered = filtered.filter((p) =>
-        selectedCategories.includes(p.productCategory),
+        selectedSubcategories.includes(p.productSubCategory),
       );
     }
 
     // Brand filter
     if (selectedBrands.length > 0) {
-      filtered = filtered.filter((p) =>
-        selectedBrands.includes(p.productBrand),
+      const brandNames = selectedBrands.map(
+        (id) => brands.find((b) => b.id === id)?.name,
       );
-    }
-
-    // Tag filter
-    if (selectedTags.length > 0) {
-      filtered = filtered.filter((p) =>
-        p.tags?.some((tag) => selectedTags.includes(tag)),
-      );
+      filtered = filtered.filter((p) => brandNames.includes(p.productBrand));
     }
 
     // Price filter
@@ -125,47 +118,172 @@ export default function Shop() {
     return filtered;
   }, [
     products,
-    selectedCategories,
+    selectedCategory,
+    selectedSubcategories,
     selectedBrands,
-    selectedTags,
     priceRange,
     sortBy,
+    categories,
+    brands,
   ]);
 
-  const toggleCategory = (category) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category],
+  const handleCategorySelect = (categoryId) => {
+    if (selectedCategory === categoryId) {
+      setSelectedCategory(null);
+      setSelectedSubcategories([]);
+    } else {
+      setSelectedCategory(categoryId);
+      setSelectedSubcategories([]);
+    }
+  };
+
+  const toggleSubcategory = (subcategory) => {
+    setSelectedSubcategories((prev) =>
+      prev.includes(subcategory)
+        ? prev.filter((s) => s !== subcategory)
+        : [...prev, subcategory],
     );
   };
 
-  const toggleBrand = (brand) => {
+  const toggleBrand = (brandId) => {
     setSelectedBrands((prev) =>
-      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand],
-    );
-  };
-
-  const toggleTag = (tag) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+      prev.includes(brandId)
+        ? prev.filter((b) => b !== brandId)
+        : [...prev, brandId],
     );
   };
 
   const clearAllFilters = () => {
-    setSelectedCategories([]);
+    setSelectedCategory(null);
+    setSelectedSubcategories([]);
     setSelectedBrands([]);
-    setSelectedTags([]);
     setPriceRange([0, 10000]);
     setSortBy("default");
   };
 
   const hasActiveFilters =
-    selectedCategories.length > 0 ||
+    selectedCategory ||
+    selectedSubcategories.length > 0 ||
     selectedBrands.length > 0 ||
-    selectedTags.length > 0 ||
     priceRange[0] !== 0 ||
     priceRange[1] !== 10000;
+
+  // Filter sidebar component
+  const FilterSidebar = ({ isMobile = false }) => (
+    <div className={cn("space-y-6", isMobile && "mb-6")}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Filters</h3>
+        {hasActiveFilters && (
+          <button
+            onClick={clearAllFilters}
+            className="text-primary text-xs hover:underline"
+          >
+            Clear All
+          </button>
+        )}
+      </div>
+
+      {/* Categories */}
+      {!isCategoriesLoading && categories.length > 0 && (
+        <div>
+          <h4 className="mb-3 text-sm font-medium">Categories</h4>
+          <div className="custom-scrollbar max-h-64 space-y-2 overflow-y-auto">
+            {categories.map((category) => (
+              <div key={category.id} className="space-y-2">
+                <label className="flex cursor-pointer items-start">
+                  <input
+                    type="checkbox"
+                    checked={selectedCategory === category.id}
+                    onChange={() => handleCategorySelect(category.id)}
+                    className="border-border mt-1 mr-2 rounded"
+                  />
+                  <span className="text-sm font-medium">{category.name}</span>
+                </label>
+
+                {/* Subcategories - show when category is selected */}
+                {selectedCategory === category.id &&
+                  category.subcategory &&
+                  category.subcategory.length > 0 && (
+                    <div className="ml-6 space-y-2">
+                      {category.subcategory.map((subcategory) => (
+                        <label
+                          key={subcategory}
+                          className="flex cursor-pointer items-center"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedSubcategories.includes(
+                              subcategory,
+                            )}
+                            onChange={() => toggleSubcategory(subcategory)}
+                            className="border-border mr-2 rounded"
+                          />
+                          <span className="text-muted-foreground text-sm">
+                            {subcategory}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Brands */}
+      {!isBrandsLoading && brands.length > 0 && (
+        <div>
+          <h4 className="mb-3 text-sm font-medium">Brands</h4>
+          <div className="custom-scrollbar max-h-48 space-y-2 overflow-y-auto">
+            {brands.map((brand) => (
+              <label
+                key={brand.id}
+                className="flex cursor-pointer items-center"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedBrands.includes(brand.id)}
+                  onChange={() => toggleBrand(brand.id)}
+                  className="border-border mr-2 rounded"
+                />
+                <span className="text-muted-foreground text-sm">
+                  {brand.name}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Price Range */}
+      <div>
+        <h4 className="mb-3 text-sm font-medium">Price Range</h4>
+        <div className="space-y-3">
+          <input
+            type="range"
+            min="0"
+            max="10000"
+            value={priceRange[1]}
+            onChange={(e) =>
+              setPriceRange([priceRange[0], parseInt(e.target.value)])
+            }
+            className="w-full"
+          />
+          <div className="text-muted-foreground flex items-center justify-between text-sm">
+            <span>
+              {currencySymbol}
+              {priceRange[0]}
+            </span>
+            <span>
+              {currencySymbol}
+              {priceRange[1]}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="bg-background">
@@ -185,101 +303,9 @@ export default function Shop() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex gap-6">
           {/* Sidebar Filters - Desktop */}
-          <aside
-            className={cn(
-              "hidden w-64 flex-shrink-0 lg:block",
-              showFilters && "block",
-            )}
-          >
+          <aside className="hidden w-64 flex-shrink-0 lg:block">
             <div className="bg-card border-border sticky top-4 rounded-lg border p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Filters</h3>
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearAllFilters}
-                    className="text-primary text-xs hover:underline"
-                  >
-                    Clear All
-                  </button>
-                )}
-              </div>
-
-              {/* Categories */}
-              {categories.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="mb-3 text-sm font-medium">Categories</h4>
-                  <div className="custom-scrollbar max-h-48 space-y-2 overflow-y-auto">
-                    {categories.map((category) => (
-                      <label
-                        key={category}
-                        className="flex cursor-pointer items-center"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedCategories.includes(category)}
-                          onChange={() => toggleCategory(category)}
-                          className="border-border mr-2 rounded"
-                        />
-                        <span className="text-muted-foreground text-sm">
-                          {category}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Brands */}
-              {brands.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="mb-3 text-sm font-medium">Brands</h4>
-                  <div className="custom-scrollbar max-h-48 space-y-2 overflow-y-auto">
-                    {brands.map((brand) => (
-                      <label
-                        key={brand}
-                        className="flex cursor-pointer items-center"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedBrands.includes(brand)}
-                          onChange={() => toggleBrand(brand)}
-                          className="border-border mr-2 rounded"
-                        />
-                        <span className="text-muted-foreground text-sm">
-                          {brand}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Price Range */}
-              <div className="mb-6">
-                <h4 className="mb-3 text-sm font-medium">Price Range</h4>
-                <div className="space-y-3">
-                  <input
-                    type="range"
-                    min="0"
-                    max="10000"
-                    value={priceRange[1]}
-                    onChange={(e) =>
-                      setPriceRange([priceRange[0], parseInt(e.target.value)])
-                    }
-                    className="w-full"
-                  />
-                  <div className="text-muted-foreground flex items-center justify-between text-sm">
-                    <span>
-                      {currencySymbol}
-                      {priceRange[0]}
-                    </span>
-                    <span>
-                      {currencySymbol}
-                      {priceRange[1]}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <FilterSidebar />
             </div>
           </aside>
 
@@ -329,7 +355,7 @@ export default function Shop() {
                           "rounded p-2 transition-colors",
                           gridLayout === cols
                             ? "bg-background shadow-sm"
-                            : "text-muted-foreground hover:",
+                            : "text-muted-foreground hover:bg-background/50",
                         )}
                       >
                         {cols === 2 && <Columns2 className="h-4 w-4" />}
@@ -347,33 +373,35 @@ export default function Shop() {
                 <span className="text-muted-foreground text-sm">
                   Active filters:
                 </span>
-                {selectedCategories.map((cat) => (
+                {selectedCategory && (
                   <button
-                    key={cat}
-                    onClick={() => toggleCategory(cat)}
+                    onClick={() => handleCategorySelect(selectedCategory)}
                     className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-3 py-1 text-xs"
                   >
-                    {cat}
+                    {
+                      categories.find((cat) => cat.id === selectedCategory)
+                        ?.name
+                    }
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+                {selectedSubcategories.map((sub) => (
+                  <button
+                    key={sub}
+                    onClick={() => toggleSubcategory(sub)}
+                    className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-3 py-1 text-xs"
+                  >
+                    {sub}
                     <X className="h-3 w-3" />
                   </button>
                 ))}
-                {selectedBrands.map((brand) => (
+                {selectedBrands.map((brandId) => (
                   <button
-                    key={brand}
-                    onClick={() => toggleBrand(brand)}
+                    key={brandId}
+                    onClick={() => toggleBrand(brandId)}
                     className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-3 py-1 text-xs"
                   >
-                    {brand}
-                    <X className="h-3 w-3" />
-                  </button>
-                ))}
-                {selectedTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => toggleTag(tag)}
-                    className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-3 py-1 text-xs"
-                  >
-                    {tag}
+                    {brands.find((b) => b.id === brandId)?.name}
                     <X className="h-3 w-3" />
                   </button>
                 ))}
@@ -444,7 +472,6 @@ export default function Shop() {
                 <div className="flex items-center gap-2">
                   {[...Array(totalPages)].map((_, i) => {
                     const pageNum = i + 1;
-                    // Show first, last, current, and adjacent pages
                     if (
                       pageNum === 1 ||
                       pageNum === totalPages ||
@@ -506,9 +533,7 @@ export default function Shop() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-
-            {/* Same filter content as desktop sidebar */}
-            {/* ... (repeat filter sections here) ... */}
+            <FilterSidebar isMobile />
           </div>
         </div>
       )}
