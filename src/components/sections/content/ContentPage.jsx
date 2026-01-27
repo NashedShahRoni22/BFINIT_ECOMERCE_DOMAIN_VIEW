@@ -1,30 +1,9 @@
 import { EmptyContent } from "./EmptyContent";
 import Hero from "./Hero";
-import { staticStoreId } from "@/utils/storeId";
+import { storeApi } from "@/lib/api/storeApi";
 
-async function getContent(apiEndpoint, storeId) {
-  try {
-    const response = await fetch(
-      `https://ecomback.bfinit.com${apiEndpoint}/${staticStoreId}`,
-      {
-        cache: "no-store",
-      },
-    );
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching content:", error);
-    return null;
-  }
-}
-
-export default async function ContentPage({ title, apiEndpoint, storeId }) {
-  const data = await getContent(apiEndpoint, storeId);
+export default async function ContentPage({ title, apiEndpoint }) {
+  const data = await storeApi(apiEndpoint);
 
   if (!data?.data) {
     return <EmptyContent title={title} />;

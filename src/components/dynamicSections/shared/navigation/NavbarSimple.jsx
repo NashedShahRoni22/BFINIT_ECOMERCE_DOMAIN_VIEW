@@ -113,10 +113,10 @@ export default function NavbarSimple({ content }) {
                   <>
                     <div className="px-2 py-2">
                       <p className="text-sm font-medium">
-                        {customer.data.name}
+                        {customer?.data?.name}
                       </p>
                       <p className="text-muted-foreground truncate text-xs">
-                        {customer.data.email}
+                        {customer?.data?.email}
                       </p>
                     </div>
                     <Separator className="my-2" />

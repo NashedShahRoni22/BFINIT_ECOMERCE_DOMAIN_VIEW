@@ -4,6 +4,7 @@ import AuthProvider from "@/providers/AuthProvider";
 import CartProvider from "@/providers/CartProvider";
 import SectionRenderer from "@/components/core/SectionRenderer";
 import { staticStoreId } from "@/utils/storeId";
+import { storeApi } from "@/lib/api/storeApi";
 import "./globals.css";
 
 const geist = Geist({
@@ -12,19 +13,17 @@ const geist = Geist({
 });
 
 export async function generateMetadata() {
-  const data = await fetch(
-    `https://ecomback.bfinit.com/meta/store/?storeId=${staticStoreId}`,
-    { cache: "no-store" },
-  );
+  const data = await storeApi("/meta/store", {
+    next: { revalidate: 3600 },
+  });
 
-  const sections = await data.json();
-  const metaInfo = sections?.data?.[0];
+  const metaInfo = data?.data?.[0];
 
   return {
-    title: metaInfo?.Title || "BFINIT - Start Your Online Store Today",
+    title: metaInfo?.Title || "Online Store",
     description:
       metaInfo?.Description ||
-      "Build, customize, and grow your online store with BFINIT. Powerful ecommerce platform with beautiful themes, easy management tools, and everything you need to sell online.",
+      "Discover quality products with fast shipping and secure checkout. Shop now for the best deals and excellent customer service.",
   };
 }
 

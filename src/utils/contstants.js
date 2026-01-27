@@ -14,10 +14,10 @@ export const footerLinks = {
 
   support: [
     { label: "Customer Support", url: "/support/customer-support" },
+    { label: "FAQ", url: "/support/faq" },
+    { label: "Shopping Guide", url: "/support/shopping-guide" },
     { label: "Return Policy", url: "/support/return-policy" },
     { label: "Legal & Terms", url: "/support/terms-and-conditions" },
-    { label: "Shopping Guide", url: "/support/shopping-guide" },
-    { label: "FAQ", url: "/support/faq" },
     { label: "Privacy Policy", url: "/support/privacy" },
   ],
 };
