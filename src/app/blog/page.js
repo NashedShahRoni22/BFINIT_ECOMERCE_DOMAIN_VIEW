@@ -39,7 +39,7 @@ export default function Blogs() {
     if (storeId) {
       fetchBlogs();
     }
-  }, []);
+  }, [storeId]);
 
   if (isLoading) {
     return (

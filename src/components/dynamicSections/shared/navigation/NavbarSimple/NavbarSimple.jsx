@@ -1,21 +1,21 @@
 "use client";
-
-import { useState } from "react";
-import { Search, ShoppingCart, User, Menu, X, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Search, ShoppingCart, User, Menu } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import useCart from "@/hooks/useCart";
 import useAuth from "@/hooks/useAuth";
 import Link from "next/link";
+import MobileNav from "./MobileNav";
+import SearchOverlay from "./SearchOverlay";
 
-const navigationLinks = [
+const navLinks = [
   { name: "Home", href: "/" },
   { name: "Shop", href: "/shop" },
   { name: "About", href: "/about" },
@@ -30,157 +30,180 @@ export default function NavbarSimple({ content }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
 
+  // Close mobile menu when resizing to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024 && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [mobileMenuOpen]);
+
+  // Prevent body scroll when mobile menu or search is open
+  useEffect(() => {
+    if (mobileMenuOpen || searchOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen, searchOpen]);
+
   return (
-    <nav className="bg-background border-border sticky top-0 z-50 border-b">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          {/* Mobile menu button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden"
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </Button>
-
-          {/* Logo */}
-          <div className="flex shrink-0 items-center">
-            <Link href="/" className="text-2xl font-bold">
-              {content.logoText}
-            </Link>
-          </div>
-
-          {/* Desktop Navigation Links */}
-          <div className="hidden flex-1 justify-center lg:flex lg:items-center lg:space-x-8">
-            {navigationLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={`${link.href}`}
-                className="hover:text-primary flex items-center gap-1 text-sm font-medium transition-colors duration-200"
+    <>
+      <nav className="bg-background border-border sticky top-0 z-50 border-b">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            {/* Mobile: Hamburger Menu (Left) */}
+            <div className="flex lg:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Open menu"
               >
-                {link.name}
-                {link.hasDropdown && <ChevronDown size={16} />}
-              </Link>
-            ))}
-          </div>
+                <Menu size={20} />
+              </Button>
+            </div>
 
-          {/* Right side icons */}
-          <div className="flex items-center space-x-2">
-            {/* Search */}
-            <div className="relative">
-              {searchOpen ? (
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Search products..."
-                    autoFocus
-                    className="h-9 w-48 text-sm sm:w-64"
-                  />
+            {/* Logo - Centered on mobile, left on desktop */}
+            <div className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0">
+              <Link href="/" className="text-xl font-bold sm:text-2xl">
+                {content.logoText}
+              </Link>
+            </div>
+
+            {/* Desktop Navigation Links */}
+            <div className="hidden flex-1 justify-center lg:flex lg:items-center lg:space-x-8">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="hover:text-primary text-sm font-medium transition-colors duration-200"
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </div>
+
+            {/* Right side icons */}
+            <div className="flex items-center gap-1">
+              {/* Search - Icon only on mobile, expandable on desktop */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSearchOpen(true)}
+                aria-label="Search"
+                className="h-9 w-9"
+              >
+                <Search size={18} />
+              </Button>
+
+              {/* Account Popover */}
+              <Popover
+                open={accountDropdownOpen}
+                onOpenChange={setAccountDropdownOpen}
+              >
+                <PopoverTrigger asChild className="hidden lg:flex">
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setSearchOpen(false)}
+                    aria-label="Account"
                     className="h-9 w-9"
                   >
-                    <X size={18} />
+                    <User size={18} />
                   </Button>
-                </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSearchOpen(true)}
-                  aria-label="Search"
-                >
-                  <Search size={20} />
-                </Button>
-              )}
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2" align="end">
+                  {customer ? (
+                    <>
+                      <div className="px-2 py-2">
+                        <p className="text-sm font-medium">
+                          {customer.data.name}
+                        </p>
+                        <p className="text-muted-foreground truncate text-xs">
+                          {customer.data.email}
+                        </p>
+                      </div>
+                      <Separator className="my-2" />
+                      <Link
+                        href="/orders"
+                        className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"
+                        onClick={() => setAccountDropdownOpen(false)}
+                      >
+                        Orders
+                      </Link>
+                      <Separator className="my-2" />
+                      <Button
+                        variant="ghost"
+                        onClick={handleLogout}
+                        className="h-auto w-full justify-start px-2 py-2 text-sm font-normal"
+                      >
+                        Sign Out
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"
+                        onClick={() => setAccountDropdownOpen(false)}
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        href="/signup"
+                        className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"
+                        onClick={() => setAccountDropdownOpen(false)}
+                      >
+                        Create Account
+                      </Link>
+                    </>
+                  )}
+                </PopoverContent>
+              </Popover>
+
+              {/* Cart with Badge */}
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="relative h-9 w-9"
+              >
+                <Link href="/cart" aria-label="Shopping cart">
+                  <ShoppingCart size={18} />
+                  {totalItems > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs"
+                    >
+                      {totalItems}
+                    </Badge>
+                  )}
+                </Link>
+              </Button>
             </div>
-
-            {/* Account Popover */}
-            <Popover
-              open={accountDropdownOpen}
-              onOpenChange={setAccountDropdownOpen}
-            >
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Account">
-                  <User size={20} />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48 p-2" align="end">
-                {customer ? (
-                  <>
-                    <div className="px-2 py-2">
-                      <p className="text-sm font-medium">
-                        {customer?.data?.name}
-                      </p>
-                      <p className="text-muted-foreground truncate text-xs">
-                        {customer?.data?.email}
-                      </p>
-                    </div>
-                    <Separator className="my-2" />
-                    {/* <Link
-                      href="/account"
-                      className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"
-                      onClick={() => setAccountDropdownOpen(false)}
-                    >
-                      My Account
-                    </Link> */}
-                    <Link
-                      href="/orders"
-                      className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"
-                      onClick={() => setAccountDropdownOpen(false)}
-                    >
-                      Orders
-                    </Link>
-                    <Separator className="my-2" />
-                    <Button
-                      variant="ghost"
-                      onClick={handleLogout}
-                      className="h-auto w-full justify-start px-2 py-2 text-sm font-normal"
-                    >
-                      Sign Out
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"
-                      onClick={() => setAccountDropdownOpen(false)}
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/signup"
-                      className="hover:bg-accent block rounded-sm px-2 py-2 text-sm transition-colors"
-                      onClick={() => setAccountDropdownOpen(false)}
-                    >
-                      Create Account
-                    </Link>
-                  </>
-                )}
-              </PopoverContent>
-            </Popover>
-
-            {/* Cart */}
-            <Button variant="ghost" size="icon" asChild className="relative">
-              <Link href="/cart">
-                <ShoppingCart size={20} />
-                {totalItems > 0 && (
-                  <Badge
-                    variant="destructive"
-                    className="absolute -top-1 -right-1 h-5 min-w-5 rounded-full px-1 text-xs"
-                  >
-                    {totalItems}
-                  </Badge>
-                )}
-              </Link>
-            </Button>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Mobile Menu Drawer */}
+      {mobileMenuOpen && (
+        <MobileNav
+          content={content}
+          navLinks={navLinks}
+          setMobileMenuOpen={setMobileMenuOpen}
+        />
+      )}
+
+      {/* Full-Screen Search Overlay */}
+      {searchOpen && <SearchOverlay setSearchOpen={setSearchOpen} />}
+    </>
   );
 }
