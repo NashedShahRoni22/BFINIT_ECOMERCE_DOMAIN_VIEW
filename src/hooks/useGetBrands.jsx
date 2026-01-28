@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { staticStoreId } from "@/utils/storeId";
+import useStoreId from "./useStoreId";
 
-const fetchBrands = async () => {
+const fetchBrands = async (storeId) => {
   const res = await fetch(
-    `https://ecomback.bfinit.com/brand?storeId=${staticStoreId}`,
+    `https://ecomback.bfinit.com/brand?storeId=${storeId}`,
   );
   if (!res.ok) {
     throw new Error("Network response was not ok");
@@ -12,9 +12,11 @@ const fetchBrands = async () => {
 };
 
 export default function useGetBrands() {
+  const { storeId } = useStoreId();
+
   return useQuery({
-    queryFn: () => fetchBrands(),
-    queryKey: ["brands", staticStoreId],
-    enabled: !!staticStoreId,
+    queryFn: () => fetchBrands(storeId),
+    queryKey: ["brands", storeId],
+    enabled: !!storeId,
   });
 }

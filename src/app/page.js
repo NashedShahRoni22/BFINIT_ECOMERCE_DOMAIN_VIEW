@@ -1,16 +1,36 @@
+"use client";
+
 import SectionRenderer from "@/components/core/SectionRenderer";
-import { staticStoreId } from "@/utils/storeId";
+import StorefrontLoader from "@/components/loader/StorefrontLoader";
+import useGetQuery from "@/hooks/api/useGetQuery";
+import useStoreId from "@/hooks/useStoreId";
 
-export default async function Home() {
-  const data = await fetch(
-    `https://ecomback.bfinit.com/store/theme/data/${staticStoreId}`,
-  );
+export default function Home() {
+  const { storeId } = useStoreId();
 
-  const sections = await data.json();
+  const { data, isLoading, error } = useGetQuery({
+    endpoint: `/store/theme/data/${storeId}`,
+    queryKey: ["theme-data", storeId],
+    enabled: !!storeId,
+  });
+
+  if (isLoading) {
+    return <StorefrontLoader />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p>Error loading theme data</p>
+      </div>
+    );
+  }
+
+  const sections = data?.data?.sections?.body;
 
   return (
     <div>
-      <SectionRenderer sections={sections?.data?.sections?.body} />
+      <SectionRenderer sections={sections} />
     </div>
   );
 }

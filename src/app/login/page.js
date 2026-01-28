@@ -16,11 +16,12 @@ import {
 } from "@/components/ui/card";
 import toast from "react-hot-toast";
 import useAuth from "@/hooks/useAuth";
-import { staticStoreId } from "@/utils/storeId";
+import useStoreId from "@/hooks/useStoreId";
 
-export default function Login({ storeId }) {
+export default function Login() {
   const router = useRouter();
   const { saveAuthInfo } = useAuth();
+  const { storeId } = useStoreId();
   const [isPending, setIsPending] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -71,7 +72,7 @@ export default function Login({ storeId }) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            storeid: staticStoreId,
+            storeid: storeId,
           },
           body: JSON.stringify({
             email: formData.email,
@@ -153,7 +154,7 @@ export default function Login({ storeId }) {
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
                   <Link
-                    href={`/${storeId}/forgot-password`}
+                    href="/forgot-password"
                     className="text-muted-foreground hover:text-foreground text-xs hover:underline"
                   >
                     Forgot password?

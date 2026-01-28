@@ -6,11 +6,12 @@ import CheckoutForm from "@/components/checkout/CheckoutForm";
 import OrderSummary from "@/components/checkout/OrderSummary";
 import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
-import { staticStoreId } from "@/utils/storeId";
 import useGetStorePreference from "@/hooks/useGetStorePreference";
+import useStoreId from "@/hooks/useStoreId";
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { storeId } = useStoreId();
   const { customer } = useAuth();
 
   const { cartItems, subtotal, clearCart } = useCart();
@@ -71,7 +72,7 @@ export default function CheckoutPage() {
       try {
         setIsBankDetailsLoading(true);
         const response = await fetch(
-          `https://ecomback.bfinit.com/bankpayment/public/${staticStoreId}`,
+          `https://ecomback.bfinit.com/bankpayment/public/${storeId}`,
         );
         if (!response.ok) throw new Error("Failed to fetch bank details");
         const result = await response.json();
@@ -200,7 +201,7 @@ export default function CheckoutPage() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${customer?.token}`,
               customerid: customer?.data?.customerId,
-              storeid: staticStoreId,
+              storeid: storeId,
             },
             body: JSON.stringify(requestBody),
           },
@@ -257,7 +258,7 @@ export default function CheckoutPage() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${customer?.token}`,
               customerid: customer?.data?.customerId,
-              storeid: staticStoreId,
+              storeid: storeId,
             },
             body: JSON.stringify(requestBody),
           },
@@ -301,7 +302,7 @@ export default function CheckoutPage() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${customer?.token}`,
               customerid: customer?.data?.customerId,
-              storeid: staticStoreId,
+              storeid: storeId,
             },
             body: JSON.stringify(requestBody),
           },

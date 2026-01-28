@@ -1,7 +1,7 @@
 "use client";
 import ProductCard from "@/components/cards/products/ProductCard";
+import useStoreId from "@/hooks/useStoreId";
 import { cn } from "@/lib/utils";
-import { staticStoreId } from "@/utils/storeId";
 import { useQuery } from "@tanstack/react-query";
 
 const gridColsMap = {
@@ -20,17 +20,19 @@ const fetchManualProducts = async (idsQuery, productsToShow) => {
   return response.json();
 };
 
-const fetchAllProducts = async () => {
-  const response = await fetch(
-    `https://ecomback.bfinit.com/product/store?storeId=${staticStoreId}`,
-  );
-  if (!response.ok) {
-    throw new Error("Network response was not ok");
-  }
-  return response.json();
-};
-
 export default function ProductGrid({ content }) {
+  const { storeId } = useStoreId();
+
+  const fetchAllProducts = async () => {
+    const response = await fetch(
+      `https://ecomback.bfinit.com/product/store?storeId=${storeId}`,
+    );
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return response.json();
+  };
+
   const isManualProduct = content?.productSource?.type === "manual";
   const manualProductIds = isManualProduct ? content?.productSource?.value : [];
   const hasManualProducts = manualProductIds && manualProductIds.length > 0;
@@ -45,8 +47,8 @@ export default function ProductGrid({ content }) {
 
   const { data: allProducts } = useQuery({
     queryFn: fetchAllProducts,
-    queryKey: ["products", "list", staticStoreId],
-    enabled: !!staticStoreId && !isManualProduct,
+    queryKey: ["products", "list", storeId],
+    enabled: !!storeId && !isManualProduct,
   });
 
   const mainProducts = isManualProduct

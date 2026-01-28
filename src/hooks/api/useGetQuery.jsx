@@ -1,30 +1,28 @@
-/*
- ** Custom hook to perform a GET request using TanStack Query.
- 
- ** Props:
- * - endpoint (string): The API endpoint path (without baseURL).
- * - token (string): Optional user token for Authorization header.
- * - queryKey (array): Unique key for caching and re-fetching.
- * - enabled (boolean): Whether the query should run automatically.
- */
-
 import { useQuery } from "@tanstack/react-query";
-import useAuth from "../auth/useAuth";
-import { getApi } from "@/services/api/getApi";
+import useAuth from "../useAuth";
+import { getApi } from "@/lib/api/getApi";
 
 export default function useGetQuery({
   endpoint,
-  token = null,
-  clientId = null,
+  token = false,
+  clientId = false,
   queryKey,
-  enabled,
+  enabled = true,
 }) {
-  const { user } = useAuth();
+  const auth = useAuth();
+  const customer = auth?.customer;
 
   return useQuery({
     queryKey,
-    queryFn: () =>
-      getApi(endpoint, token && user?.token, clientId && user?.data?.clientid),
+    queryFn: async () => {
+      const result = await getApi(
+        endpoint,
+        token ? customer?.token : null,
+        clientId ? customer?.data?.clientid : null,
+      );
+
+      return result;
+    },
     enabled,
   });
 }

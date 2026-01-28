@@ -3,11 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import Hero from "@/components/sections/contact/Hero";
 import ContactInfo from "@/components/sections/contact/ContactInfo";
 import ContactForm from "@/components/sections/contact/ContactForm";
-import { staticStoreId } from "@/utils/storeId";
+import useStoreId from "@/hooks/useStoreId";
 
-const fetchStorePreference = async () => {
+const fetchStorePreference = async (storeId) => {
   const response = await fetch(
-    `https://ecomback.bfinit.com/store/preference/?storeId=${staticStoreId}`,
+    `https://ecomback.bfinit.com/store/preference/?storeId=${storeId}`,
   );
   if (!response.ok) {
     throw new Error("Network response was not ok");
@@ -16,10 +16,12 @@ const fetchStorePreference = async () => {
 };
 
 export default function Contact() {
+  const { storeId } = useStoreId();
+
   const { data } = useQuery({
-    queryFn: fetchStorePreference,
-    queryKey: ["storePreference", staticStoreId],
-    enabled: !!staticStoreId,
+    queryFn: () => fetchStorePreference(storeId),
+    queryKey: ["storePreference", storeId],
+    enabled: !!storeId,
   });
 
   return (

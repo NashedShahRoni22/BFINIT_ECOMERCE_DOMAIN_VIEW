@@ -4,19 +4,19 @@ import { Columns2, Columns3, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import ProductCard from "@/components/cards/products/ProductCard";
-import { staticStoreId } from "@/utils/storeId";
 import useGetStorePreference from "@/hooks/useGetStorePreference";
 import useGetCategories from "@/hooks/useGetCategories";
 import useGetBrands from "@/hooks/useGetBrands";
+import useStoreId from "@/hooks/useStoreId";
 
 const gridLayoutMap = {
   2: "grid-cols-1 sm:grid-cols-2",
   3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
 };
 
-const fetchAllProducts = async (currentPage, productsPerPage) => {
+const fetchAllProducts = async (currentPage, productsPerPage, storeId) => {
   const response = await fetch(
-    `https://ecomback.bfinit.com/product/store?storeId=${staticStoreId}&page=${currentPage}&limit=${productsPerPage}`,
+    `https://ecomback.bfinit.com/product/store?storeId=${storeId}&page=${currentPage}&limit=${productsPerPage}`,
   );
   if (!response.ok) {
     throw new Error("Network response was not ok");
@@ -25,6 +25,7 @@ const fetchAllProducts = async (currentPage, productsPerPage) => {
 };
 
 export default function Shop() {
+  const { storeId } = useStoreId();
   const [currentPage, setCurrentPage] = useState(1);
   const [gridLayout, setGridLayout] = useState(3);
   const [sortBy, setSortBy] = useState("default");
@@ -40,9 +41,9 @@ export default function Shop() {
     useGetCategories();
   const { data: brandsData, isLoading: isBrandsLoading } = useGetBrands();
   const { data: productsData, isLoading } = useQuery({
-    queryFn: () => fetchAllProducts(currentPage, productsPerPage),
-    queryKey: ["shop-products", staticStoreId, currentPage],
-    enabled: !!staticStoreId,
+    queryFn: () => fetchAllProducts(currentPage, productsPerPage, storeId),
+    queryKey: ["shop-products", storeId, currentPage],
+    enabled: !!storeId,
   });
   const { data: storePreference } = useGetStorePreference();
 

@@ -23,12 +23,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import toast from "react-hot-toast";
-import { staticStoreId } from "@/utils/storeId";
 import useAuth from "@/hooks/useAuth";
+import useStoreId from "@/hooks/useStoreId";
 
-export default function SignUpPage({ storeId }) {
+export default function SignUpPage() {
   const router = useRouter();
   const { saveAuthInfo } = useAuth();
+  const { storeId } = useStoreId();
   const [isPending, setIsPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
@@ -92,7 +93,7 @@ export default function SignUpPage({ storeId }) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            storeid: staticStoreId,
+            storeid: storeId,
           },
           body: JSON.stringify({
             name: formData.name,

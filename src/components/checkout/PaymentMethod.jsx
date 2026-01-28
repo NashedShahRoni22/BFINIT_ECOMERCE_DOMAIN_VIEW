@@ -13,20 +13,21 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
-import { staticStoreId } from "@/utils/storeId";
+import useStoreId from "@/hooks/useStoreId";
 
 export default function PaymentMethod({
   paymentMethod,
   setPaymentMethod,
   bankDetails,
 }) {
+  const { storeId } = useStoreId();
   const [copiedField, setCopiedField] = useState(null);
 
   const { data: stripeConfig, isLoading: isStripeConfigLoading } = useQuery({
-    queryKey: ["stripe-client-config", staticStoreId],
+    queryKey: ["stripe-client-config", storeId],
     queryFn: async () => {
       const response = await fetch(
-        `${import.meta.env.NEXT_PUBLIC_API_URL}/payments/stripe/public/client/${staticStoreId}`,
+        `${import.meta.env.NEXT_PUBLIC_API_URL}/payments/stripe/public/client/${storeId}`,
       );
       if (!response.ok) {
         throw new Error("Failed to fetch Stripe config");

@@ -4,10 +4,11 @@ import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, ArrowRight } from "lucide-react";
-import { staticStoreId } from "@/utils/storeId";
 import { Skeleton } from "@/components/ui/skeleton";
+import useStoreId from "@/hooks/useStoreId";
 
 export default function Blogs() {
+  const { storeId } = useStoreId();
   const [blogs, setBlogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,7 +18,7 @@ export default function Blogs() {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `https://ecomback.bfinit.com/blog/all/?storeId=${staticStoreId}`,
+          `https://ecomback.bfinit.com/blog/all/?storeId=${storeId}`,
         );
 
         if (!response.ok) {
@@ -35,7 +36,7 @@ export default function Blogs() {
       }
     }
 
-    if (staticStoreId) {
+    if (storeId) {
       fetchBlogs();
     }
   }, []);
