@@ -12,8 +12,8 @@ export default function StoreIdProvider({ children }) {
     const hostname = window.location.hostname;
     const cleanDomain = hostname.replace(/^www\./, "");
 
-    // setDomain(cleanDomain);
-    setDomain("talkenglish24.com");
+    setDomain(cleanDomain);
+    // setDomain("talkenglish24.com");
 
     // Check localStorage for cached storeId and domain
     const cachedStoreId = localStorage.getItem("storeId");
