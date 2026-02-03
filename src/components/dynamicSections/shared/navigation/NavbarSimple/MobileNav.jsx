@@ -4,7 +4,12 @@ import { Separator } from "@/components/ui/separator";
 import useAuth from "@/hooks/useAuth";
 import Link from "next/link";
 
-export default function MobileNav({ content, navLinks, setMobileMenuOpen }) {
+export default function MobileNav({
+  data,
+  content,
+  navLinks,
+  setMobileMenuOpen,
+}) {
   const { customer, handleLogout } = useAuth();
 
   return (
@@ -18,7 +23,7 @@ export default function MobileNav({ content, navLinks, setMobileMenuOpen }) {
       {/* Drawer */}
       <div className="bg-background border-border fixed inset-y-0 left-0 z-50 w-64 border-r shadow-lg lg:hidden">
         <div className="flex h-16 items-center justify-between px-4">
-          <span className="text-lg font-bold">{content.logoText}</span>
+          <span className="text-lg font-bold">{data?.storeName}</span>
           <Button
             variant="ghost"
             size="icon"

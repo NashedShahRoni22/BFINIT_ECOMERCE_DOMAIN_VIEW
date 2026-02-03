@@ -14,6 +14,18 @@ import useAuth from "@/hooks/useAuth";
 import Link from "next/link";
 import MobileNav from "./MobileNav";
 import SearchOverlay from "./SearchOverlay";
+import useStoreId from "@/hooks/useStoreId";
+import { useQuery } from "@tanstack/react-query";
+
+const fetchStorePreference = async (storeId) => {
+  const response = await fetch(
+    `https://ecomback.bfinit.com/store/preference/?storeId=${storeId}`,
+  );
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  return response.json();
+};
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -25,6 +37,14 @@ const navLinks = [
 export default function NavbarSimple({ content }) {
   const { customer, handleLogout } = useAuth();
   const { totalItems } = useCart();
+
+  const { storeId } = useStoreId();
+
+  const { data } = useQuery({
+    queryFn: () => fetchStorePreference(storeId),
+    queryKey: ["storePreference", storeId],
+    enabled: !!storeId,
+  });
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -75,7 +95,7 @@ export default function NavbarSimple({ content }) {
             {/* Logo - Centered on mobile, left on desktop */}
             <div className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0">
               <Link href="/" className="text-xl font-bold sm:text-2xl">
-                {content.logoText}
+                {data?.storeName}
               </Link>
             </div>
 
@@ -196,6 +216,7 @@ export default function NavbarSimple({ content }) {
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
         <MobileNav
+          data={data}
           content={content}
           navLinks={navLinks}
           setMobileMenuOpen={setMobileMenuOpen}

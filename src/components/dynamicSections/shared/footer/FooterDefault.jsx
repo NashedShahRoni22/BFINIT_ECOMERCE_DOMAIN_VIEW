@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import {
   Mail,
@@ -10,13 +11,30 @@ import {
   Youtube,
 } from "lucide-react";
 import { footerLinks } from "@/utils/contstants";
+import useStoreId from "@/hooks/useStoreId";
+import { useQuery } from "@tanstack/react-query";
 
-const extractStoreName = (copyrightText) => {
-  const match = copyrightText.match(/©\s+\d{4}\s+(.+?)\./);
-  return match ? match[1].trim() : "";
+const fetchStorePreference = async (storeId) => {
+  const response = await fetch(
+    `https://ecomback.bfinit.com/store/preference/?storeId=${storeId}`,
+  );
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  return response.json();
 };
 
 export default function FooterDefault({ content }) {
+  const { storeId } = useStoreId();
+
+  const { data } = useQuery({
+    queryFn: () => fetchStorePreference(storeId),
+    queryKey: ["storePreference", storeId],
+    enabled: !!storeId,
+  });
+
+  const fullAddress = `${data?.storeAddress} ${data?.country}`;
+
   const {
     description,
     showContactInfo,
@@ -39,9 +57,7 @@ export default function FooterDefault({ content }) {
         <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5 lg:gap-12">
           {/* Company Info */}
           <div className="lg:col-span-2">
-            <h3 className="mb-3 text-lg font-semibold">
-              {extractStoreName(copyright)}
-            </h3>
+            <h3 className="mb-3 text-lg font-semibold">{data?.storeName}</h3>
             <p className="text-muted-foreground mb-6 max-w-md text-sm leading-relaxed">
               {description}
             </p>
@@ -50,24 +66,24 @@ export default function FooterDefault({ content }) {
             {showContactInfo && (
               <div className="space-y-3 text-sm">
                 <a
-                  href={`mailto:${contact?.email}`}
+                  href={`mailto:${data?.storeEmail}`}
                   className="text-muted-foreground hover: flex items-center gap-2 transition-colors"
                 >
                   <Mail className="h-4 w-4 shrink-0" />
-                  <span>{contact?.email}</span>
+                  <span>{data?.storeEmail}</span>
                 </a>
 
                 <a
-                  href={`tel:${contact?.mobile}`}
+                  href={`tel:${data?.storePhone}`}
                   className="text-muted-foreground hover: flex items-center gap-2 transition-colors"
                 >
                   <Phone className="h-4 w-4 shrink-0" />
-                  <span>{contact?.mobile}</span>
+                  <span>{data?.storePhone}</span>
                 </a>
 
                 <div className="text-muted-foreground flex items-start gap-2">
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span className="leading-relaxed">{contact?.address}</span>
+                  <span className="leading-relaxed">{fullAddress}</span>
                 </div>
               </div>
             )}
@@ -165,7 +181,7 @@ export default function FooterDefault({ content }) {
           <div className="mb-6 flex flex-col items-center justify-between gap-4 md:flex-row">
             {/* Copyright */}
             <p className="text-muted-foreground text-center text-sm md:text-left">
-              {copyright}
+              © 2026 {data?.storeName}. All rights reserved.
             </p>
 
             {/* Social Links */}
