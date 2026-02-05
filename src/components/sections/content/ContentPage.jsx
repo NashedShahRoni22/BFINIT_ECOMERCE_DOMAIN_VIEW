@@ -1,9 +1,17 @@
+"use client";
+import useGetQuery from "@/hooks/api/useGetQuery";
 import { EmptyContent } from "./EmptyContent";
 import Hero from "./Hero";
-import { storeApi } from "@/lib/api/storeApi";
+import useStoreId from "@/hooks/useStoreId";
 
-export default async function ContentPage({ title, apiEndpoint }) {
-  const data = await storeApi(apiEndpoint);
+export default function ContentPage({ title, apiEndpoint }) {
+  const { storeId } = useStoreId();
+
+  const { data } = useGetQuery({
+    endpoint: `${apiEndpoint}/${storeId}`,
+    enabled: !!apiEndpoint && !!storeId,
+    queryKey: [apiEndpoint, storeId],
+  });
 
   if (!data?.data) {
     return <EmptyContent title={title} />;
