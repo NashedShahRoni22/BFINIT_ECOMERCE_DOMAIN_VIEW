@@ -1,10 +1,15 @@
+import { getDefaultCountry } from "@/utils/currencyHelpers";
 import { Mail, Phone, MapPin } from "lucide-react";
 
 export default function ContactInfo({ data = {} }) {
+  const defaultCountry = getDefaultCountry(data);
+
   const { storePhone, storeTelephone, storeEmail, storeAddress, country } =
     data;
 
-  const fullAddress = storeAddress + country;
+  const fullAddress = country
+    ? storeAddress + country
+    : `${data?.storeAddress}, ${defaultCountry?.country_name}`;
   const encodedAddress = encodeURIComponent(fullAddress);
   const mapUrl = `https://www.google.com/maps?q=${encodedAddress}`;
 

@@ -14,10 +14,6 @@ export async function storeApi(endpoint, options = {}) {
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} - ${response.statusText}`);
-    }
-
     return await response.json();
   } catch (error) {
     console.error(`Store API Error [${endpoint}]:`, error);

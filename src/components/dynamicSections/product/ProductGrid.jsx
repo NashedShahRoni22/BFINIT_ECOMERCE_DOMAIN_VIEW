@@ -1,5 +1,6 @@
 "use client";
 import ProductCard from "@/components/cards/products/ProductCard";
+import useCountry from "@/hooks/useCountry";
 import useStoreId from "@/hooks/useStoreId";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
@@ -10,9 +11,9 @@ const gridColsMap = {
   6: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6",
 };
 
-const fetchManualProducts = async (idsQuery, productsToShow) => {
+const fetchManualProducts = async (idsQuery, productsToShow, countryName) => {
   const response = await fetch(
-    `https://ecomback.bfinit.com/product/store/batches?ids=${idsQuery}&limit=${productsToShow || 8}`,
+    `https://ecomback.bfinit.com/product/store/batches?ids=${idsQuery}&limit=${productsToShow || 8}&countryName=${countryName}`,
   );
   if (!response.ok) {
     throw new Error("Network response was not ok");
@@ -22,10 +23,13 @@ const fetchManualProducts = async (idsQuery, productsToShow) => {
 
 export default function ProductGrid({ content }) {
   const { storeId } = useStoreId();
+  const { selectedCountry, isLoading } = useCountry();
+
+  const countryName = selectedCountry?.country_name;
 
   const fetchAllProducts = async () => {
     const response = await fetch(
-      `https://ecomback.bfinit.com/product/store?storeId=${storeId}`,
+      `https://ecomback.bfinit.com/product/store?storeId=${storeId}&countryName=${countryName}`,
     );
     if (!response.ok) {
       throw new Error("Network response was not ok");
@@ -40,15 +44,21 @@ export default function ProductGrid({ content }) {
 
   // TODO: need to fix product object structure as same as allProducts
   const { data: manualProducts } = useQuery({
-    queryFn: () => fetchManualProducts(idsQuery, content?.productsToShow),
-    queryKey: ["manual-products", idsQuery],
-    enabled: !!idsQuery && !!content?.productsToShow && hasManualProducts,
+    queryFn: () =>
+      fetchManualProducts(idsQuery, content?.productsToShowm, countryName),
+    queryKey: ["manual-products", idsQuery, countryName],
+    enabled:
+      !!idsQuery &&
+      !!content?.productsToShow &&
+      !!countryName &&
+      hasManualProducts &&
+      !isLoading,
   });
 
   const { data: allProducts } = useQuery({
     queryFn: fetchAllProducts,
-    queryKey: ["products", "list", storeId],
-    enabled: !!storeId && !isManualProduct,
+    queryKey: ["products", "list", storeId, countryName],
+    enabled: !!storeId && !isManualProduct && !!countryName && !isLoading,
   });
 
   const mainProducts = isManualProduct

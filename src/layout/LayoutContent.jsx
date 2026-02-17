@@ -6,6 +6,7 @@ import useGetQuery from "@/hooks/api/useGetQuery";
 import StorefrontLoader from "@/components/loader/StorefrontLoader";
 import DomainErrorScreen from "@/components/errors/DomainErrorScreen";
 import ThemeErrorScreen from "@/components/errors/ThemeErrorScreen";
+import CountrySelectModal from "@/components/modals/CountrySelectModal";
 
 export default function LayoutContent({ children }) {
   const {
@@ -65,6 +66,7 @@ export default function LayoutContent({ children }) {
 
   return (
     <>
+      <CountrySelectModal />
       <SectionRenderer sections={sections?.header} />
       {children}
       <SectionRenderer sections={sections?.footer} />

@@ -70,7 +70,9 @@ export default function CartProvider({ children }) {
 
     setCartItems((prev) => {
       // Determine if product has variants
-      const hasVariants = product.variants?.enabled && selectedVariant !== null;
+      const hasVariants =
+        (product?.pricing?.variants?.enabled || product?.variants?.enabled) &&
+        selectedVariant !== null;
 
       // Get pricing
       // Note: productPrice = actual selling price
@@ -78,38 +80,51 @@ export default function CartProvider({ children }) {
       let actualPrice, compareAtPrice;
 
       if (hasVariants) {
-        if (product.variants.useDefaultPricing) {
+        if (product?.pricing?.variants?.useDefaultPricing) {
+          const rawPrice = product?.pricing?.productPrice;
+          const rawCompareAt = product?.pricing?.discountPrice;
+
+          actualPrice = parseFloat(rawPrice);
+          compareAtPrice = rawCompareAt > 0 ? parseFloat(rawCompareAt) : null;
+        }
+        if (product?.variants?.useDefaultPricing) {
           // Use product default price
           const rawPrice =
-            product.productPrice?.$numberDecimal || product.productPrice;
+            product?.productPrice?.$numberDecimal || product?.productPrice;
           const rawCompareAt =
-            product.productDiscount?.$numberDecimal || product.productDiscount;
+            product?.productDiscount?.$numberDecimal ||
+            product?.productDiscount;
 
           actualPrice = parseFloat(rawPrice);
           compareAtPrice = rawCompareAt > 0 ? parseFloat(rawCompareAt) : null;
         } else {
           // Use variant-specific price
           const variantPrice = parseFloat(
-            selectedVariant.price?.$numberDecimal || 0,
+            selectedVariant?.price?.$numberDecimal || 0,
           );
           const variantCompareAt = parseFloat(
-            selectedVariant.discountPrice?.$numberDecimal || 0,
+            selectedVariant?.discountPrice?.$numberDecimal || 0,
           );
 
           actualPrice =
             variantPrice > 0
               ? variantPrice
               : parseFloat(
-                  product.productPrice?.$numberDecimal || product.productPrice,
+                  product?.productPrice?.$numberDecimal ||
+                    product?.productPrice,
                 );
           compareAtPrice = variantCompareAt > 0 ? variantCompareAt : null;
         }
       } else {
         // Non-variant product - use product price
         const rawPrice =
-          product.productPrice?.$numberDecimal || product.productPrice;
+          product?.pricing?.productPrice ||
+          product?.productPrice?.$numberDecimal ||
+          product?.productPrice;
         const rawCompareAt =
-          product.productDiscount?.$numberDecimal || product.productDiscount;
+          product?.pricing?.discountPrice ||
+          product?.productDiscount?.$numberDecimal ||
+          product?.productDiscount;
 
         actualPrice = parseFloat(rawPrice);
         compareAtPrice = rawCompareAt > 0 ? parseFloat(rawCompareAt) : null;
@@ -118,8 +133,8 @@ export default function CartProvider({ children }) {
       // Determine thumbnail
       const thumbnail =
         hasVariants && selectedVariant.image?.length > 0
-          ? selectedVariant.image[0]
-          : product.thumbnailImage;
+          ? selectedVariant?.image[0]
+          : product?.thumbnailImage;
 
       // Create new cart item
       const cartItem = {

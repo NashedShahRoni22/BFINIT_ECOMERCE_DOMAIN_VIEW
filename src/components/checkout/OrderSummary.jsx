@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import useGetStorePreference from "@/hooks/useGetStorePreference";
 import Image from "next/image";
 import { formatPrice } from "@/utils/formatPrice";
+import useCountry from "@/hooks/useCountry";
 
 export default function OrderSummary({
   subtotal,
@@ -12,9 +13,11 @@ export default function OrderSummary({
   handlePlaceOrder,
   cartItems,
 }) {
+  const { selectedCountry } = useCountry();
   const { data: storePreference } = useGetStorePreference();
 
-  const currencySymbol = storePreference?.data?.currencySymbol;
+  const currencySymbol =
+    selectedCountry?.currency_symbol || storePreference?.data?.currencySymbol;
 
   return (
     <div className="lg:col-span-1">

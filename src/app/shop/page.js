@@ -8,15 +8,21 @@ import useGetStorePreference from "@/hooks/useGetStorePreference";
 import useGetCategories from "@/hooks/useGetCategories";
 import useGetBrands from "@/hooks/useGetBrands";
 import useStoreId from "@/hooks/useStoreId";
+import useCountry from "@/hooks/useCountry";
 
 const gridLayoutMap = {
   2: "grid-cols-1 md:grid-cols-2 lg:grid-cols-2",
   3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
 };
 
-const fetchAllProducts = async (currentPage, productsPerPage, storeId) => {
+const fetchAllProducts = async (
+  currentPage,
+  productsPerPage,
+  storeId,
+  countryName,
+) => {
   const response = await fetch(
-    `https://ecomback.bfinit.com/product/store?storeId=${storeId}&page=${currentPage}&limit=${productsPerPage}`,
+    `https://ecomback.bfinit.com/product/store?storeId=${storeId}&countryName=${countryName}&page=${currentPage}&limit=${productsPerPage}`,
   );
   if (!response.ok) {
     throw new Error("Network response was not ok");
@@ -26,6 +32,9 @@ const fetchAllProducts = async (currentPage, productsPerPage, storeId) => {
 
 export default function Shop() {
   const { storeId } = useStoreId();
+  const { selectedCountry, isLoading: isSelectedCountryLoading } = useCountry();
+
+  const countryName = selectedCountry?.country_name;
   const [currentPage, setCurrentPage] = useState(1);
   const [gridLayout, setGridLayout] = useState(3);
   const [sortBy, setSortBy] = useState("default");
@@ -41,9 +50,10 @@ export default function Shop() {
     useGetCategories();
   const { data: brandsData, isLoading: isBrandsLoading } = useGetBrands();
   const { data: productsData, isLoading } = useQuery({
-    queryFn: () => fetchAllProducts(currentPage, productsPerPage, storeId),
-    queryKey: ["shop-products", storeId, currentPage],
-    enabled: !!storeId,
+    queryFn: () =>
+      fetchAllProducts(currentPage, productsPerPage, storeId, countryName),
+    queryKey: ["shop-products", storeId, currentPage, countryName],
+    enabled: !!storeId && !!countryName && !isSelectedCountryLoading,
   });
   const { data: storePreference } = useGetStorePreference();
 
@@ -76,8 +86,10 @@ export default function Shop() {
 
     // Subcategory filter
     if (selectedSubcategories.length > 0) {
-      filtered = filtered.filter((p) =>
-        selectedSubcategories.includes(p.productSubCategory),
+      filtered = filtered.filter(
+        (p) =>
+          p.productSubCategory &&
+          selectedSubcategories.includes(p.productSubCategory),
       );
     }
 
@@ -86,13 +98,19 @@ export default function Shop() {
       const brandNames = selectedBrands.map(
         (id) => brands.find((b) => b.id === id)?.name,
       );
-      filtered = filtered.filter((p) => brandNames.includes(p.productBrand));
+      filtered = filtered.filter(
+        (p) => p.productBrand && brandNames.includes(p.productBrand),
+      );
     }
 
     // Price filter
     filtered = filtered.filter((p) => {
-      const price = p.productPrice;
-      return price >= priceRange[0] && price <= priceRange[1];
+      const price =
+        p.pricing?.productPrice ||
+        p.pricingData?.productPrice?.$numberDecimal ||
+        0;
+      const priceNum = typeof price === "string" ? parseFloat(price) : price;
+      return priceNum >= priceRange[0] && priceNum <= priceRange[1];
     });
 
     // Sorting

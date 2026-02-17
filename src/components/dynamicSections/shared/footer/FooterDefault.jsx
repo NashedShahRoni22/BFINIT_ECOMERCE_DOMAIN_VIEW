@@ -9,10 +9,15 @@ import {
   Instagram,
   Linkedin,
   Youtube,
+  Globe,
 } from "lucide-react";
 import { footerLinks } from "@/utils/contstants";
 import useStoreId from "@/hooks/useStoreId";
 import { useQuery } from "@tanstack/react-query";
+import { getDefaultCountry } from "@/utils/currencyHelpers";
+import { useMemo } from "react";
+import useCountry from "@/hooks/useCountry";
+import FooterCountrySwitcher from "./FooterCountrySwitcher";
 
 const fetchStorePreference = async (storeId) => {
   const response = await fetch(
@@ -26,6 +31,7 @@ const fetchStorePreference = async (storeId) => {
 
 export default function FooterDefault({ content }) {
   const { storeId } = useStoreId();
+  const { selectedCountry, saveCountry } = useCountry();
 
   const { data } = useQuery({
     queryFn: () => fetchStorePreference(storeId),
@@ -33,7 +39,10 @@ export default function FooterDefault({ content }) {
     enabled: !!storeId,
   });
 
-  const fullAddress = `${data?.storeAddress} ${data?.country}`;
+  const countries = useMemo(() => data?.countries || [], [data?.countries]);
+  const defaultCountry = getDefaultCountry(data);
+
+  const fullAddress = `${data?.storeAddress}, ${data?.country ? data?.country : defaultCountry?.country_name}`;
 
   const {
     description,
@@ -50,6 +59,10 @@ export default function FooterDefault({ content }) {
     ([_, url]) => url && url.trim() !== "",
   );
 
+  const handleCountryChange = (country) => {
+    saveCountry(country);
+  };
+
   return (
     <footer className="bg-card border-border border-t">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -65,21 +78,21 @@ export default function FooterDefault({ content }) {
             {/* Contact Info */}
             {showContactInfo && (
               <div className="space-y-3 text-sm">
-                <a
+                <Link
                   href={`mailto:${data?.storeEmail}`}
-                  className="text-muted-foreground hover: flex items-center gap-2 transition-colors"
+                  className="text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors"
                 >
                   <Mail className="h-4 w-4 shrink-0" />
                   <span>{data?.storeEmail}</span>
-                </a>
+                </Link>
 
-                <a
+                <Link
                   href={`tel:${data?.storePhone}`}
-                  className="text-muted-foreground hover: flex items-center gap-2 transition-colors"
+                  className="text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors"
                 >
                   <Phone className="h-4 w-4 shrink-0" />
                   <span>{data?.storePhone}</span>
-                </a>
+                </Link>
 
                 <div className="text-muted-foreground flex items-start gap-2">
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
@@ -100,7 +113,7 @@ export default function FooterDefault({ content }) {
                   <li key={index}>
                     <Link
                       href={link.url}
-                      className="text-muted-foreground hover: inline-block text-sm transition-colors"
+                      className="text-muted-foreground hover:text-foreground inline-block text-sm transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -109,27 +122,6 @@ export default function FooterDefault({ content }) {
               </ul>
             </div>
           )}
-
-          {/* Shop Links */}
-          {/* {shop && shop.length > 0 && (
-            <div>
-              <h4 className="mb-4 text-sm font-semibold tracking-wider uppercase">
-                Shop
-              </h4>
-              <ul className="space-y-3">
-                {shop.map((link, index) => (
-                  <li key={index}>
-                    <Link
-                      href={link.url}
-                      className="text-muted-foreground hover: inline-block text-sm transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )} */}
 
           {/* Support Links */}
           {support && support.length > 0 && (
@@ -142,7 +134,7 @@ export default function FooterDefault({ content }) {
                   <li key={index}>
                     <Link
                       href={link.url}
-                      className="text-muted-foreground hover: inline-block text-sm transition-colors"
+                      className="text-muted-foreground hover:text-foreground inline-block text-sm transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -162,7 +154,7 @@ export default function FooterDefault({ content }) {
                   <li key={index}>
                     <Link
                       href={link.url}
-                      className="text-muted-foreground hover: inline-block text-sm transition-colors"
+                      className="text-muted-foreground hover:text-foreground inline-block text-sm transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -177,63 +169,72 @@ export default function FooterDefault({ content }) {
         <div className="border-border border-t"></div>
 
         {/* Bottom Footer */}
-        <div className="pt-8">
-          <div className="mb-6 flex flex-col items-center justify-between gap-4 md:flex-row">
+        <div className="flex flex-col items-center justify-between gap-4 pt-8 md:flex-row">
+          {/* Left side: Copyright + Country Switcher */}
+          <div className="flex flex-col items-center gap-3 md:flex-row md:items-center md:gap-6">
             {/* Copyright */}
             <p className="text-muted-foreground text-center text-sm md:text-left">
               © 2026 {data?.storeName}. All rights reserved.
             </p>
 
-            {/* Social Links */}
-            {showSocialLinks && activeSocialLinks?.length > 0 && (
-              <div className="flex items-center gap-4">
-                {socialLinks?.facebook && (
-                  <a
-                    href={socialLinks?.facebook}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover: transition-colors"
-                    aria-label="Facebook"
-                  >
-                    <Facebook className="h-5 w-5" />
-                  </a>
-                )}
-                {socialLinks?.twitter && (
-                  <a
-                    href={socialLinks?.twitter}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover: transition-colors"
-                    aria-label="Twitter"
-                  >
-                    <Twitter className="h-5 w-5" />
-                  </a>
-                )}
-                {socialLinks?.instagram && (
-                  <a
-                    href={socialLinks?.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover: transition-colors"
-                    aria-label="Instagram"
-                  >
-                    <Instagram className="h-5 w-5" />
-                  </a>
-                )}
-                {socialLinks?.youtube && (
-                  <a
-                    href={socialLinks?.youtube}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover: transition-colors"
-                    aria-label="LinkedIn"
-                  >
-                    <Youtube className="h-5 w-5" />
-                  </a>
-                )}
-              </div>
+            {/* Country Switcher Dropdown */}
+            {countries?.length > 0 && (
+              <FooterCountrySwitcher
+                handleCountryChange={handleCountryChange}
+                data={data}
+              />
             )}
           </div>
+
+          {/* Social Links */}
+          {showSocialLinks && activeSocialLinks?.length > 0 && (
+            <div className="flex items-center gap-4">
+              {socialLinks?.facebook && (
+                <Link
+                  href={socialLinks?.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="h-5 w-5" />
+                </Link>
+              )}
+              {socialLinks?.twitter && (
+                <Link
+                  href={socialLinks?.twitter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Twitter"
+                >
+                  <Twitter className="h-5 w-5" />
+                </Link>
+              )}
+              {socialLinks?.instagram && (
+                <Link
+                  href={socialLinks?.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="h-5 w-5" />
+                </Link>
+              )}
+              {socialLinks?.youtube && (
+                <Link
+                  href={socialLinks?.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="YouTube"
+                >
+                  <Youtube className="h-5 w-5" />
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </footer>

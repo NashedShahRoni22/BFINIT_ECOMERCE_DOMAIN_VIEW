@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Search, ShoppingCart, User, Menu } from "lucide-react";
 import {
   Popover,
@@ -11,11 +11,14 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import useCart from "@/hooks/useCart";
 import useAuth from "@/hooks/useAuth";
+import useCountry from "@/hooks/useCountry";
 import Link from "next/link";
 import MobileNav from "./MobileNav";
 import SearchOverlay from "./SearchOverlay";
 import useStoreId from "@/hooks/useStoreId";
 import { useQuery } from "@tanstack/react-query";
+import { getDefaultCountry } from "@/utils/currencyHelpers";
+import CountrySwitcher from "./CountrySwitcher";
 
 const fetchStorePreference = async (storeId) => {
   const response = await fetch(
@@ -35,10 +38,10 @@ const navLinks = [
 ];
 
 export default function NavbarSimple({ content }) {
-  const { customer, handleLogout } = useAuth();
-  const { totalItems } = useCart();
-
   const { storeId } = useStoreId();
+  const { totalItems } = useCart();
+  const { selectedCountry, saveCountry } = useCountry();
+  const { customer, handleLogout } = useAuth();
 
   const { data } = useQuery({
     queryFn: () => fetchStorePreference(storeId),
@@ -49,6 +52,9 @@ export default function NavbarSimple({ content }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+
+  const countries = useMemo(() => data?.countries || [], [data?.countries]);
+  const defaultCountry = getDefaultCountry(data);
 
   // Close mobile menu when resizing to desktop
   useEffect(() => {
@@ -74,6 +80,10 @@ export default function NavbarSimple({ content }) {
       document.body.style.overflow = "";
     };
   }, [mobileMenuOpen, searchOpen]);
+
+  const handleCountryChange = (country) => {
+    saveCountry(country);
+  };
 
   return (
     <>
@@ -114,6 +124,14 @@ export default function NavbarSimple({ content }) {
 
             {/* Right side icons */}
             <div className="flex items-center gap-1">
+              {/* Country Switcher - Desktop only */}
+              {countries.length > 0 && (
+                <CountrySwitcher
+                  handleCountryChange={handleCountryChange}
+                  data={data}
+                />
+              )}
+
               {/* Search - Icon only on mobile, expandable on desktop */}
               <Button
                 variant="ghost"
@@ -220,6 +238,10 @@ export default function NavbarSimple({ content }) {
           content={content}
           navLinks={navLinks}
           setMobileMenuOpen={setMobileMenuOpen}
+          countries={countries}
+          selectedCountry={selectedCountry}
+          defaultCountry={defaultCountry}
+          onCountryChange={handleCountryChange}
         />
       )}
 

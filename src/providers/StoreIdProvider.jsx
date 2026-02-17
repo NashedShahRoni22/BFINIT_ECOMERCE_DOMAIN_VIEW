@@ -5,7 +5,7 @@ import useGetQuery from "@/hooks/api/useGetQuery";
 
 export default function StoreIdProvider({ children }) {
   const [domain, setDomain] = useState("");
-  const [storeId, setStoreId] = useState("");
+  const [storeId, setStoreId] = useState("69898f57b104b007445a579f"); // TODO: remove the storeId before build
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {

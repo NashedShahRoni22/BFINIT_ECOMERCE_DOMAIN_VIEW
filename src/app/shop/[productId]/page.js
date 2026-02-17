@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import { Minus, Plus, ShoppingCart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,36 +11,34 @@ import { Label } from "@/components/ui/label";
 import useCart from "@/hooks/useCart";
 import useGetStorePreference from "@/hooks/useGetStorePreference";
 import { formatPrice } from "@/utils/formatPrice";
+import useCountry from "@/hooks/useCountry";
+import useStoreId from "@/hooks/useStoreId";
+import useGetQuery from "@/hooks/api/useGetQuery";
 
 export default function ProductDetails() {
   const params = useParams();
   const router = useRouter();
-  const productId = params.productId;
+  const { selectedCountry, isLoading: countryLoading } = useCountry();
   const { addToCart } = useCart();
+  const { data: storePreference } = useGetStorePreference();
+  const { storeId } = useStoreId();
 
   const [selectedImage, setSelectedImage] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [selectedVariants, setSelectedVariants] = useState({});
   const [currentVariantData, setCurrentVariantData] = useState(null);
 
-  const { data: storePreference } = useGetStorePreference();
+  const productId = params.productId;
+  const countryName = selectedCountry?.country_name;
+  const currencySymbol =
+    selectedCountry?.currency_symbol || storePreference?.data?.currencySymbol;
 
   // Fetch product data with Tanstack Query
-  const { data, isLoading } = useQuery({
-    queryKey: ["product", productId],
-    queryFn: async () => {
-      const response = await fetch(
-        `https://ecomback.bfinit.com/product/?productId=${productId}`,
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch product");
-      }
-      return response.json();
-    },
-    enabled: !!productId,
+  const { data, isLoading } = useGetQuery({
+    endpoint: `/product/individualCountryProduct/?productId=${productId}&countryName=${countryName}&storeId=${storeId}`,
+    queryKey: ["product", productId, countryName, storeId],
+    enabled: !!productId && !!countryName && !!storeId && !countryLoading,
   });
-
-  const currencySymbol = storePreference?.data?.currencySymbol;
 
   const product = data?.data;
 
@@ -127,6 +124,10 @@ export default function ProductDetails() {
   };
 
   const getCurrentPrice = () => {
+    if (product?.pricing?.length > 0) {
+      return formatPrice(product?.pricing[0]?.productPrice, currencySymbol);
+    }
+
     if (
       product?.variants?.enabled &&
       !product.variants.useDefaultPricing &&
@@ -141,6 +142,11 @@ export default function ProductDetails() {
   };
 
   const getDiscountPrice = () => {
+    if (product?.pricing?.length > 0) {
+      const discount = parseFloat(product?.pricing[0]?.discountPrice);
+      return discount > 0 ? discount : null;
+    }
+
     if (
       product?.variants?.enabled &&
       !product.variants.useDefaultPricing &&
@@ -298,7 +304,7 @@ export default function ProductDetails() {
                 <span className="text-4xl font-bold">{getCurrentPrice()}</span>
                 {getDiscountPrice() && (
                   <span className="text-muted-foreground text-xl line-through">
-                    ${getDiscountPrice().toFixed(2)}
+                    {formatPrice(getDiscountPrice(), currencySymbol)}
                   </span>
                 )}
               </div>

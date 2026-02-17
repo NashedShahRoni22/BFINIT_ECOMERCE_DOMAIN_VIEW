@@ -1,7 +1,5 @@
 "use client";
-import { useContext } from "react";
 import { Minus, Plus, X, ShoppingBag, ArrowRight, Tag } from "lucide-react";
-import { CartContext } from "@/context/CartContext";
 import Link from "next/link";
 import useAuth from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -9,9 +7,13 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import useGetStorePreference from "@/hooks/useGetStorePreference";
 import { formatPrice } from "@/utils/formatPrice";
+import useCart from "@/hooks/useCart";
+import useCountry from "@/hooks/useCountry";
 
 export default function Cart() {
+  const router = useRouter();
   const { customer } = useAuth();
+  const { selectedCountry } = useCountry();
   const {
     cartItems,
     removeFromCart,
@@ -20,12 +22,12 @@ export default function Cart() {
     subtotal,
     totalSavings,
     getItemPrice,
-  } = useContext(CartContext);
+  } = useCart();
 
   const { data: storePreference } = useGetStorePreference();
-  const currencySymbol = storePreference?.data?.currencySymbol;
 
-  const router = useRouter();
+  const currencySymbol =
+    selectedCountry?.currency_symbol || storePreference?.data?.currencySymbol;
 
   if (cartItems.length === 0) {
     return (

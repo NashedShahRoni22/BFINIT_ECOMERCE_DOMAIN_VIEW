@@ -6,6 +6,7 @@ import { storeApi } from "@/lib/api/storeApi";
 import StoreIdProvider from "@/providers/StoreIdProvider";
 import LayoutContent from "@/layout/LayoutContent";
 import "./globals.css";
+import CountryProvider from "@/providers/CountryProvider";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -33,11 +34,13 @@ export default async function RootLayout({ children }) {
       <body className="font-geist antialiased">
         <TanstackProvider>
           <StoreIdProvider>
-            <AuthProvider>
-              <CartProvider>
-                <LayoutContent>{children}</LayoutContent>
-              </CartProvider>
-            </AuthProvider>
+            <CountryProvider>
+              <AuthProvider>
+                <CartProvider>
+                  <LayoutContent>{children}</LayoutContent>
+                </CartProvider>
+              </AuthProvider>
+            </CountryProvider>
           </StoreIdProvider>
         </TanstackProvider>
       </body>

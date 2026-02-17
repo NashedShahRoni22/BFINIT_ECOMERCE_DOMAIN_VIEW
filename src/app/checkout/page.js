@@ -8,13 +8,14 @@ import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import useGetStorePreference from "@/hooks/useGetStorePreference";
 import useStoreId from "@/hooks/useStoreId";
+import useCountry from "@/hooks/useCountry";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { storeId } = useStoreId();
   const { customer } = useAuth();
-
   const { cartItems, subtotal, clearCart } = useCart();
+  const { selectedCountry: storeSelectedCountry } = useCountry();
 
   const [countries, setCountries] = useState([]);
   const [isCountriesLoading, setIsCountriesLoading] = useState(true);
@@ -168,6 +169,7 @@ export default function CheckoutPage() {
         products: cartItems.map((item) => ({
           productId: item.productId,
           productName: item.productName,
+          countryId: storeSelectedCountry._id,
           hasVariants: item.hasVariants,
           variant: item.variant,
           quantity: item.quantity,
@@ -194,7 +196,7 @@ export default function CheckoutPage() {
 
       try {
         const response = await fetch(
-          `https://ecomback.bfinit.com/v2/store/global/orders/create/cod`,
+          `https://ecomback.bfinit.com/orders/create/cod`,
           {
             method: "POST",
             headers: {
