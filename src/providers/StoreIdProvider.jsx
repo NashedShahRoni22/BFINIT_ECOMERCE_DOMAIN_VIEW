@@ -5,7 +5,7 @@ import useGetQuery from "@/hooks/api/useGetQuery";
 
 export default function StoreIdProvider({ children }) {
   const [domain, setDomain] = useState("");
-  const [storeId, setStoreId] = useState("69898f57b104b007445a579f"); // TODO: remove the storeId before build
+  const [storeId, setStoreId] = useState("");
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
@@ -13,7 +13,6 @@ export default function StoreIdProvider({ children }) {
     const cleanDomain = hostname.replace(/^www\./, "");
 
     setDomain(cleanDomain);
-    // setDomain("talkenglish24.com");
 
     // Check localStorage for cached storeId and domain
     const cachedStoreId = localStorage.getItem("storeId");
