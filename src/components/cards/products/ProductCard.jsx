@@ -212,8 +212,9 @@ export default function ProductCard({ product }) {
             </div>
             <Button
               size="sm"
+              variant="outline"
               onClick={handleAddToCart}
-              className="hover:bg-primary/90 h-9 gap-1.5 px-3 text-xs font-medium"
+              className="hover:bg-primary hover:text-primary-foreground hover:border-primary h-9 gap-1.5 px-3 text-xs font-medium transition-all active:scale-95"
             >
               <ShoppingCart className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Add</span>

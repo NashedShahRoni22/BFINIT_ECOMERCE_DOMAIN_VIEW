@@ -270,23 +270,6 @@ export default function ProductDetails() {
             {/* Title and Rating */}
             <div>
               <h1 className="text-3xl font-bold">{product.productName}</h1>
-              <div className="mt-2 flex items-center gap-2">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${
-                        i < Math.floor(product.rating)
-                          ? "fill-warning text-warning"
-                          : "fill-muted text-muted"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-muted-foreground text-sm">
-                  ({product.rating.toFixed(1)})
-                </span>
-              </div>
             </div>
 
             {/* Short Description */}
