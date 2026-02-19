@@ -1,12 +1,13 @@
 import { Geist } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 import TanstackProvider from "@/providers/TanstackProvider";
 import AuthProvider from "@/providers/AuthProvider";
 import CartProvider from "@/providers/CartProvider";
-import { storeApi } from "@/lib/api/storeApi";
 import StoreIdProvider from "@/providers/StoreIdProvider";
 import LayoutContent from "@/layout/LayoutContent";
-import "./globals.css";
 import CountryProvider from "@/providers/CountryProvider";
+import { storeApi } from "@/lib/api/storeApi";
+import "./globals.css";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -37,6 +38,7 @@ export default async function RootLayout({ children }) {
             <CountryProvider>
               <AuthProvider>
                 <CartProvider>
+                  <Toaster />
                   <LayoutContent>{children}</LayoutContent>
                 </CartProvider>
               </AuthProvider>

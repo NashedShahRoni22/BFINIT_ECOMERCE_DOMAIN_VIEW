@@ -170,19 +170,34 @@ export default function CheckoutPage() {
           productId: item.productId,
           productName: item.productName,
           countryId: storeSelectedCountry._id,
-          hasVariants: item.hasVariants,
-          variant: item.variant,
+          hasVariants: item.hasVariants || false,
+          ...(item?.variant?.attributeId && {
+            variants: [
+              {
+                attributeId: item?.variant?.attributeId,
+                attributeName: item?.variant?.name,
+                valueId: item?.variant?.value?.id,
+                valueName: item?.variant?.value?.name,
+                sku: item?.selectedVariant?.sku,
+                price:
+                  parseFloat(item?.selectedVariant?.price?.$numberDecimal) > 0
+                    ? parseFloat(item?.selectedVariant?.price?.$numberDecimal)
+                    : parseFloat(item?.actualPrice),
+              },
+            ],
+          }),
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           discountPrice: item.discountPrice,
           taxAmount: 0,
+          shippingCharge: 0,
           lineTotal: parseFloat(
             (item.discountPrice * item.quantity).toFixed(2),
           ),
         })),
         pricingSummary: {
           subTotal: parseFloat(subtotal.toFixed(2)),
-          shippingCharges: 0,
+          shippingTotal: 0,
           taxTotal: 0,
           discountTotal: 0,
           grandTotal: parseFloat(subtotal.toFixed(2)),
@@ -190,6 +205,7 @@ export default function CheckoutPage() {
         currencyCode: storePreference?.data?.currencyCode,
         payment: {
           method: "COD",
+          status: "PENDING",
         },
         shippingDetails: formData,
       };
