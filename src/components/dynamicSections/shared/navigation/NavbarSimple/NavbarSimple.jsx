@@ -127,6 +127,7 @@ export default function NavbarSimple({ content }) {
               {/* Country Switcher - Desktop only */}
               {countries.length > 0 && (
                 <CountrySwitcher
+                  className="hidden lg:flex"
                   handleCountryChange={handleCountryChange}
                   data={data}
                 />
@@ -235,13 +236,9 @@ export default function NavbarSimple({ content }) {
       {mobileMenuOpen && (
         <MobileNav
           data={data}
-          content={content}
           navLinks={navLinks}
           setMobileMenuOpen={setMobileMenuOpen}
-          countries={countries}
-          selectedCountry={selectedCountry}
-          defaultCountry={defaultCountry}
-          onCountryChange={handleCountryChange}
+          handleCountryChange={handleCountryChange}
         />
       )}
 

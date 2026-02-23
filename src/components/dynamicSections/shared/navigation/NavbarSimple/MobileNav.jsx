@@ -3,12 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import useAuth from "@/hooks/useAuth";
 import Link from "next/link";
+import CountrySwitcher from "./CountrySwitcher";
 
 export default function MobileNav({
   data,
-  content,
   navLinks,
   setMobileMenuOpen,
+  handleCountryChange,
 }) {
   const { customer, handleLogout } = useAuth();
 
@@ -54,6 +55,14 @@ export default function MobileNav({
 
         {/* User Section */}
         <div className="p-4">
+          <CountrySwitcher
+            className="bg-muted hover:bg-accent w-full rounded-md py-2 transition-colors"
+            handleCountryChange={handleCountryChange}
+            data={data}
+          />
+
+          <Separator className="my-3" />
+
           {customer ? (
             <>
               <div className="bg-muted mb-3 rounded-md p-3">

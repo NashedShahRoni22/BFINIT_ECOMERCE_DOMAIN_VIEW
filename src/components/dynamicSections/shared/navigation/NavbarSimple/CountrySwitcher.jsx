@@ -11,8 +11,13 @@ import { getDefaultCountry } from "@/utils/currencyHelpers";
 import { useMemo, useState } from "react";
 import useCart from "@/hooks/useCart";
 import CurrencySwitchWarningModal from "@/components/modals/CurrencySwitchWarningModal";
+import { cn } from "@/lib/utils";
 
-export default function CountrySwitcher({ handleCountryChange, data }) {
+export default function CountrySwitcher({
+  handleCountryChange,
+  data,
+  className,
+}) {
   const { selectedCountry } = useCountry();
   const { cartItems, clearCart } = useCart();
   const defaultCountry = getDefaultCountry(data);
@@ -54,7 +59,7 @@ export default function CountrySwitcher({ handleCountryChange, data }) {
           <Button
             variant="ghost"
             size="sm"
-            className="hidden h-9 items-center gap-1.5 px-2.5 text-xs lg:flex"
+            className={cn("h-9 items-center gap-1.5 px-2.5 text-xs", className)}
           >
             <Globe size={14} />
             <span className="font-medium">
