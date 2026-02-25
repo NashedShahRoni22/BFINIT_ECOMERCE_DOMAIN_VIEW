@@ -40,15 +40,6 @@ export default function CartProvider({ children }) {
     return productId;
   };
 
-  /**
-   * Check if two variants are the same
-   */
-  const isSameVariant = (variant1, variant2) => {
-    if (!variant1 && !variant2) return true;
-    if (!variant1 || !variant2) return false;
-    return variant1._id === variant2._id;
-  };
-
   const addToCart = (
     product,
     quantity = 1,
@@ -69,35 +60,54 @@ export default function CartProvider({ children }) {
     }
 
     setCartItems((prev) => {
-      // Determine if product has variants
-      const hasVariants =
-        (product?.pricing?.variants?.enabled || product?.variants?.enabled) &&
-        selectedVariant !== null;
+      // ---------------------------------------------------------------
+      // Normalise variant config — handles two product shapes:
+      //   ProductDetails API  → product.pricing is an ARRAY  → pricing[0].variants
+      //   VariantSelectorModal → product.pricing is an OBJECT → pricing.variants
+      // ---------------------------------------------------------------
+      const variantConfig =
+        product?.pricing?.[0]?.variants || // ProductDetails (array)
+        product?.pricing?.variants || // VariantSelectorModal (object)
+        product?.variants || // legacy shape
+        null;
 
-      // Get pricing
-      // Note: productPrice = actual selling price
-      //       productDiscount = "compare at" price (marketing gimmick, always higher)
+      const hasVariants =
+        variantConfig?.enabled === true && selectedVariant !== null;
+
+      const useDefaultPricing = variantConfig?.useDefaultPricing ?? true;
+
+      // ---------------------------------------------------------------
+      // Resolve product-level fallback price — again handles both shapes
+      // ---------------------------------------------------------------
+      const productFallbackPrice = parseFloat(
+        product?.pricing?.[0]?.productPrice || // ProductDetails
+          product?.pricing?.productPrice || // VariantSelectorModal
+          product?.productPrice?.$numberDecimal || // legacy
+          product?.productPrice ||
+          0,
+      );
+
+      const productFallbackCompareAt = parseFloat(
+        product?.pricing?.[0]?.discountPrice ||
+          product?.pricing?.discountPrice ||
+          product?.productDiscount?.$numberDecimal ||
+          product?.productDiscount ||
+          0,
+      );
+
+      // ---------------------------------------------------------------
+      // Resolve actual price
+      // ---------------------------------------------------------------
       let actualPrice, compareAtPrice;
 
       if (hasVariants) {
-        if (product?.pricing?.variants?.useDefaultPricing) {
-          const rawPrice = product?.pricing?.productPrice;
-          const rawCompareAt = product?.pricing?.discountPrice;
-
-          actualPrice = parseFloat(rawPrice);
-          compareAtPrice = rawCompareAt > 0 ? parseFloat(rawCompareAt) : null;
-        } else if (product?.variants?.useDefaultPricing) {
-          // Use product default price
-          const rawPrice =
-            product?.productPrice?.$numberDecimal || product?.productPrice;
-          const rawCompareAt =
-            product?.productDiscount?.$numberDecimal ||
-            product?.productDiscount;
-
-          actualPrice = parseFloat(rawPrice);
-          compareAtPrice = rawCompareAt > 0 ? parseFloat(rawCompareAt) : null;
+        if (useDefaultPricing) {
+          // All variants share the product-level price
+          actualPrice = productFallbackPrice;
+          compareAtPrice =
+            productFallbackCompareAt > 0 ? productFallbackCompareAt : null;
         } else {
-          // Use variant-specific price, fallback to product price if 0 or null
+          // Each variant has its own price; fall back to product price if 0
           const variantPrice = parseFloat(
             selectedVariant?.price?.$numberDecimal || 0,
           );
@@ -105,50 +115,40 @@ export default function CartProvider({ children }) {
             selectedVariant?.discountPrice?.$numberDecimal || 0,
           );
 
-          const productFallbackPrice = parseFloat(
-            product?.productPrice?.$numberDecimal || product?.productPrice || 0,
-          );
-
           actualPrice = variantPrice > 0 ? variantPrice : productFallbackPrice;
           compareAtPrice = variantCompareAt > 0 ? variantCompareAt : null;
         }
       } else {
-        // Non-variant product - use product price
-        const rawPrice =
-          product?.pricing?.productPrice ||
-          product?.productPrice?.$numberDecimal ||
-          product?.productPrice;
-        const rawCompareAt =
-          product?.pricing?.discountPrice ||
-          product?.productDiscount?.$numberDecimal ||
-          product?.productDiscount;
-
-        actualPrice = parseFloat(rawPrice);
-        compareAtPrice = rawCompareAt > 0 ? parseFloat(rawCompareAt) : null;
+        // Non-variant product
+        actualPrice = productFallbackPrice;
+        compareAtPrice =
+          productFallbackCompareAt > 0 ? productFallbackCompareAt : null;
       }
 
+      // ---------------------------------------------------------------
       // Determine thumbnail
+      // ---------------------------------------------------------------
       const thumbnail =
         hasVariants && selectedVariant.image?.length > 0
-          ? selectedVariant?.image[0]
+          ? selectedVariant.image[0]
           : product?.thumbnailImage;
 
-      // Create new cart item
+      // ---------------------------------------------------------------
+      // Build cart item
+      // ---------------------------------------------------------------
       const cartItem = {
         id: cartItemId,
         productId: product._id || product.productId,
         productName: product.productName,
         thumbnailImage: thumbnail,
 
-        // Pricing (renamed for clarity)
-        // actualPrice = what customer pays
-        // compareAtPrice = "was" price for marketing
+        // Pricing
         actualPrice,
         compareAtPrice,
 
-        // Keep old names for backwards compatibility
-        unitPrice: actualPrice, // DEPRECATED: use actualPrice
-        discountPrice: actualPrice, // DEPRECATED: use actualPrice
+        // Backwards-compatible aliases
+        unitPrice: actualPrice,
+        discountPrice: actualPrice,
 
         // Quantity
         quantity,
@@ -169,9 +169,6 @@ export default function CartProvider({ children }) {
 
         // Raw variant data (for display)
         selectedVariant: selectedVariant || null,
-
-        // Store useDefaultPricing flag
-        useDefaultPricing: product.variants?.useDefaultPricing || true,
 
         // Timestamps
         addedAt: new Date().toISOString(),

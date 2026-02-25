@@ -26,33 +26,29 @@ export default function VariantSelectorModal({ open, onClose, product }) {
 
   const currencySymbol =
     selectedCountry?.currency_symbol || storePreference?.data?.currencySymbol;
-  const price = product?.pricing?.productPrice || product?.price;
+
   const newFormattedVariants = product?.pricing?.variants?.attributes;
 
+  // ✅ FIXED: useDefaultPricing=true → always return product price, never read variant.price
+  //           useDefaultPricing=false → use variant price, fallback to product price if 0
   const getVariantPrice = (variant) => {
-    if (
-      newFormattedVariants?.length > 0 &&
-      product?.pricing?.variants?.useDefaultPricing &&
-      variant?.price
-    ) {
-      const price = parseFloat(variant.price.$numberDecimal || variant.price);
-      const discount = variant.discountPrice
-        ? parseFloat(
-            variant.discountPrice.$numberDecimal || variant.discountPrice,
-          )
-        : 0;
-      return discount > 0 ? discount : price;
+    if (product?.pricing?.variants?.useDefaultPricing) {
+      return product?.pricing?.productPrice || product?.productPrice;
     }
 
-    // FIX: product.variants was accessed without optional chaining, crashing when undefined
-    if (!product?.variants?.useDefaultPricing && variant?.price) {
-      const price = parseFloat(variant.price.$numberDecimal || variant.price);
-      const discount = variant.discountPrice
+    if (variant?.price) {
+      const price = parseFloat(
+        variant?.price?.$numberDecimal || variant?.price || 0,
+      );
+      const discount = variant?.discountPrice
         ? parseFloat(
-            variant.discountPrice.$numberDecimal || variant.discountPrice,
+            variant?.discountPrice?.$numberDecimal || variant?.discountPrice,
           )
         : 0;
-      return discount > 0 ? discount : price;
+      const resolved = discount > 0 ? discount : price;
+      return resolved > 0
+        ? resolved
+        : product?.pricing?.productPrice || product?.productPrice;
     }
 
     return product?.pricing?.productPrice || product?.productPrice;
@@ -81,6 +77,12 @@ export default function VariantSelectorModal({ open, onClose, product }) {
     handleClose();
   };
 
+  // ✅ CHANGED: Dynamic — shows base price until a variant is selected,
+  //             then updates to reflect the selected variant's price.
+  const displayPrice = selectedVariant
+    ? getVariantPrice(selectedVariant)
+    : product?.pricing?.productPrice || product?.price;
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
@@ -98,13 +100,14 @@ export default function VariantSelectorModal({ open, onClose, product }) {
             />
             <div>
               <h3 className="font-semibold">{product.productName}</h3>
+              {/* ✅ CHANGED: Uses displayPrice instead of static price */}
               <p className="text-muted-foreground text-sm">
-                {formatPrice(price, currencySymbol)}
+                {formatPrice(displayPrice, currencySymbol)}
               </p>
             </div>
           </div>
 
-          {/* Variant Selection */}
+          {/* Variant Selection — old format */}
           {!newFormattedVariants?.length > 0 &&
             product.variants?.attributes?.map((attribute, attrIndex) => (
               <div key={attrIndex} className="space-y-3">
@@ -122,14 +125,13 @@ export default function VariantSelectorModal({ open, onClose, product }) {
                     setSelectedVariant(variant);
                   }}
                 >
+                  {/* ✅ CHANGED: Removed per-row price — price shown in header instead */}
                   {attribute.value?.map((variant) => {
-                    const variantPrice = getVariantPrice(variant);
                     const isOutOfStock = false;
-
                     return (
                       <div
                         key={variant.sku}
-                        className={`border-border flex items-center justify-between rounded-lg border p-3 ${
+                        className={`border-border flex items-center rounded-lg border p-3 ${
                           isOutOfStock ? "opacity-50" : ""
                         }`}
                       >
@@ -157,22 +159,6 @@ export default function VariantSelectorModal({ open, onClose, product }) {
                             </div>
                           </Label>
                         </div>
-
-                        <div className="text-right">
-                          <p className="font-semibold">
-                            {formatPrice(variantPrice)}
-                          </p>
-                          {/* TODO: fix this status after stock track feature */}
-                          {/* {isOutOfStock ? (
-                          <p className="text-destructive text-xs">
-                            Out of stock
-                          </p>
-                        ) : (
-                          <p className="text-muted-foreground text-xs">
-                            {variant.stock} in stock
-                          </p>
-                        )} */}
-                        </div>
                       </div>
                     );
                   })}
@@ -180,7 +166,7 @@ export default function VariantSelectorModal({ open, onClose, product }) {
               </div>
             ))}
 
-          {/* New formated variant selection modal */}
+          {/* Variant Selection — new format */}
           {newFormattedVariants?.length > 0 &&
             newFormattedVariants?.map((attribute, attrIndex) => (
               <div key={attrIndex} className="space-y-3">
@@ -198,14 +184,13 @@ export default function VariantSelectorModal({ open, onClose, product }) {
                     setSelectedVariant(variant);
                   }}
                 >
+                  {/* ✅ CHANGED: Removed per-row price — price shown in header instead */}
                   {attribute.value?.map((variant) => {
-                    const variantPrice = getVariantPrice(variant);
                     const isOutOfStock = false;
-
                     return (
                       <div
                         key={variant.sku}
-                        className={`border-border flex items-center justify-between rounded-lg border p-3 ${
+                        className={`border-border flex items-center rounded-lg border p-3 ${
                           isOutOfStock ? "opacity-50" : ""
                         }`}
                       >
@@ -233,14 +218,6 @@ export default function VariantSelectorModal({ open, onClose, product }) {
                             </div>
                           </Label>
                         </div>
-
-                        {variantPrice > 0 && (
-                          <div className="text-right">
-                            <p className="font-semibold">
-                              {formatPrice(variantPrice, currencySymbol)}
-                            </p>
-                          </div>
-                        )}
                       </div>
                     );
                   })}
@@ -272,7 +249,7 @@ export default function VariantSelectorModal({ open, onClose, product }) {
                   const maxStock = selectedVariant?.stock || 999;
                   setQuantity(Math.min(maxStock, quantity + 1));
                 }}
-                // disabled={selectedVariant && quantity >= selectedVariant.stock} // TODO: stock track logic will be here too
+                // disabled={selectedVariant && quantity >= selectedVariant.stock} // TODO: stock track
               >
                 <Plus className="h-4 w-4" />
               </Button>

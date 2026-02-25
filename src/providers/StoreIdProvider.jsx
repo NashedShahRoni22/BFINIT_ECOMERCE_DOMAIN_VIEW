@@ -6,7 +6,7 @@ import useGetQuery from "@/hooks/api/useGetQuery";
 export default function StoreIdProvider({ children }) {
   const [domain, setDomain] = useState("");
   const [storeId, setStoreId] = useState(
-    process.env.NODE_ENV === "development" ? "69898f57b104b007445a579f" : "",
+    process.env.NODE_ENV === "development" ? "699c1c43b36840cff8671e3b" : "",
   );
   const [isInitializing, setIsInitializing] = useState(true);
 
