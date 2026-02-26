@@ -1,16 +1,19 @@
 "use client";
 
 import { CartContext } from "@/context/CartContext";
+import useStoreId from "@/hooks/useStoreId";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 export default function CartProvider({ children }) {
+  const { storeId } = useStoreId();
+
   const [cartItems, setCartItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
+    const savedCart = localStorage.getItem(`store_${storeId}_cart`);
     if (savedCart) {
       try {
         setCartItems(JSON.parse(savedCart));
@@ -18,16 +21,16 @@ export default function CartProvider({ children }) {
         console.error("Failed to load cart:", error);
       }
     }
-  }, []);
+  }, [storeId]);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
     if (cartItems.length > 0) {
-      localStorage.setItem("cart", JSON.stringify(cartItems));
+      localStorage.setItem(`store_${storeId}_cart`, JSON.stringify(cartItems));
     } else {
-      localStorage.removeItem("cart");
+      localStorage.removeItem(`store_${storeId}_cart`);
     }
-  }, [cartItems]);
+  }, [cartItems, storeId]);
 
   /**
    * Generate unique cart item ID
@@ -213,7 +216,7 @@ export default function CartProvider({ children }) {
    */
   const clearCart = () => {
     setCartItems([]);
-    localStorage.removeItem("cart");
+    localStorage.removeItem(`store_${storeId}_cart`);
     toast.success("Cart cleared");
   };
 
