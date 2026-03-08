@@ -75,7 +75,7 @@ export default function Shop() {
   // Filter and sort products
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
-
+ 
     // Category filter
     if (selectedCategory) {
       const categoryName = categories.find(
@@ -83,7 +83,7 @@ export default function Shop() {
       )?.name;
       filtered = filtered.filter((p) => p.productCategory === categoryName);
     }
-
+ 
     // Subcategory filter
     if (selectedSubcategories.length > 0) {
       filtered = filtered.filter(
@@ -92,7 +92,7 @@ export default function Shop() {
           selectedSubcategories.includes(p.productSubCategory),
       );
     }
-
+ 
     // Brand filter
     if (selectedBrands.length > 0) {
       const brandNames = selectedBrands.map(
@@ -102,24 +102,26 @@ export default function Shop() {
         (p) => p.productBrand && brandNames.includes(p.productBrand),
       );
     }
-
+ 
     // Price filter
     filtered = filtered.filter((p) => {
-      const price =
-        p.pricing?.productPrice ||
-        p.pricingData?.productPrice?.$numberDecimal ||
-        0;
-      const priceNum = typeof price === "string" ? parseFloat(price) : price;
+      const priceNum = p.pricing?.productPrice || 0;
       return priceNum >= priceRange[0] && priceNum <= priceRange[1];
     });
-
+ 
     // Sorting
     switch (sortBy) {
       case "price-asc":
-        filtered.sort((a, b) => a.productPrice - b.productPrice);
+        filtered.sort(
+          (a, b) =>
+            (a.pricing?.productPrice || 0) - (b.pricing?.productPrice || 0),
+        );
         break;
       case "price-desc":
-        filtered.sort((a, b) => b.productPrice - a.productPrice);
+        filtered.sort(
+          (a, b) =>
+            (b.pricing?.productPrice || 0) - (a.pricing?.productPrice || 0),
+        );
         break;
       case "name-asc":
         filtered.sort((a, b) => a.productName.localeCompare(b.productName));
@@ -133,7 +135,7 @@ export default function Shop() {
       default:
         break;
     }
-
+ 
     return filtered;
   }, [
     products,
@@ -541,18 +543,52 @@ export default function Shop() {
 
       {/* Mobile Filters Overlay */}
       {showFilters && (
-        <div className="bg-background/80 fixed inset-0 z-50 backdrop-blur-sm lg:hidden">
-          <div className="bg-card border-border fixed inset-y-0 left-0 w-full max-w-sm overflow-y-auto border-r p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Filters</h3>
+        <div
+          className="fixed inset-0 z-50 lg:hidden"
+          onClick={() => setShowFilters(false)}
+        >
+          {/* Dark backdrop */}
+          <div className="absolute inset-0 bg-black/60" />
+ 
+          {/* Drawer — stops propagation so tapping inside doesn't close */}
+          <div
+            className="bg-card border-border absolute inset-y-0 left-0 flex w-4/5 max-w-sm flex-col overflow-hidden border-r shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="border-border flex items-center justify-between border-b px-5 py-4">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="text-primary h-4 w-4" />
+                <h3 className="text-base font-semibold">Filters</h3>
+                {hasActiveFilters && (
+                  <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs font-medium">
+                    Active
+                  </span>
+                )}
+              </div>
               <button
                 onClick={() => setShowFilters(false)}
-                className="hover:bg-accent rounded-md p-2"
+                className="bg-muted hover:bg-accent text-foreground flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+                aria-label="Close filters"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
-            <FilterSidebar isMobile />
+ 
+            {/* Scrollable content */}
+            <div className="custom-scrollbar flex-1 overflow-y-auto px-5 py-5">
+              <FilterSidebar isMobile />
+            </div>
+ 
+            {/* Footer CTA */}
+            <div className="border-border border-t px-5 py-4">
+              <button
+                onClick={() => setShowFilters(false)}
+                className="bg-primary text-primary-foreground w-full rounded-md py-2.5 text-sm font-medium transition-opacity hover:opacity-90"
+              >
+                Show Results ({filteredProducts.length})
+              </button>
+            </div>
           </div>
         </div>
       )}

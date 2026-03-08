@@ -66,9 +66,9 @@ export default function MobileNav({
           {customer ? (
             <>
               <div className="bg-muted mb-3 rounded-md p-3">
-                <p className="text-sm font-medium">{customer.data.name}</p>
+                <p className="text-sm font-medium">{customer?.data?.name}</p>
                 <p className="text-muted-foreground truncate text-xs">
-                  {customer.data.email}
+                  {customer?.data?.email}
                 </p>
               </div>
               <Link
